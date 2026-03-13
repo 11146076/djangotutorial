@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}編輯檔案 - 社群網站{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-body">
+        <h5 class="card-title mb-4">編輯個人檔案</h5>
+        <form method="post" action="{% url 'accounts:profile_edit' %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="id_bio" class="form-label">簡介</label>
+            <textarea name="bio" id="id_bio" class="form-control" rows="3">{{ form.bio.value|default:'' }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label for="id_website" class="form-label">個人網站</label>
+            <input type="url" name="website" id="id_website" class="form-control" value="{{ form.website.value|default:'' }}" placeholder="https://">
+          </div>
+          <div class="mb-3">
+            <label for="id_avatar" class="form-label">頭像</label>
+            <input type="file" name="avatar" id="id_avatar" class="form-control" accept="image/*">
+          </div>
+          <button type="submit" class="btn btn-primary">儲存</button>
+          <a href="{% url 'accounts:profile_detail' user.username %}" class="btn btn-outline-secondary">取消</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

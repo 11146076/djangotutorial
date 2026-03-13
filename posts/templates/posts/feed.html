@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}首頁 - 社群網站{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    {% if user.is_authenticated %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <form action="{% url 'posts:post_create' %}" method="post" class="mb-0">
+          {% csrf_token %}
+          <textarea name="content" class="form-control mb-2" rows="3" placeholder="分享新鮮事..." required></textarea>
+          <button type="submit" class="btn btn-primary">發佈</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div id="feed-list">
+      {% for post in posts %}
+      <article class="card shadow-sm mb-3" data-post-id="{{ post.pk }}">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <span class="fw-bold">{{ post.author.username }}</span>
+            <span class="text-muted ms-2 small">{{ post.created_at|timesince }} 前</span>
+          </div>
+          <p class="card-text mb-2">{{ post.content|linebreaksbr }}</p>
+          {% if post.image %}
+          <img src="{{ post.image.url }}" alt="" class="img-fluid rounded mb-2" style="max-height: 400px; object-fit: cover;">
+          {% endif %}
+          <div class="d-flex align-items-center text-muted small">
+            <span class="me-3">{{ post.likes.count }} 個讚</span>
+            <span>{{ post.comments.count }} 則留言</span>
+          </div>
+          {% if user.is_authenticated %}
+          <div class="mt-2">
+            <a href="{% url 'posts:like_toggle' post.pk %}" class="btn btn-outline-danger btn-sm">讚</a>
+          </div>
+          <hr>
+          <div class="comments">
+            {% for comment in post.comments.all %}
+            <p class="small mb-1"><strong>{{ comment.author.username }}</strong> {{ comment.content }}</p>
+            {% endfor %}
+            <form action="{% url 'posts:comment_create' post.pk %}" method="post" class="mt-2">
+              {% csrf_token %}
+              <div class="input-group input-group-sm">
+                <input type="text" name="content" class="form-control" placeholder="留言..." required>
+                <button type="submit" class="btn btn-outline-primary">送出</button>
+              </div>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </article>
+      {% empty %}
+      <div class="card shadow-sm">
+        <div class="card-body text-center text-muted py-5">
+          <p class="mb-0">尚無貼文，{% if user.is_authenticated %}來發第一篇吧！{% else %}登入後即可發文與互動。{% endif %}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

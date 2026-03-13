@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }} - 社群網站{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex align-items-center">
+          {% if profile.avatar %}
+          <img src="{{ profile.avatar.url }}" alt="" class="rounded-circle me-3" width="64" height="64" style="object-fit: cover;">
+          {% else %}
+          <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 64px; height: 64px; font-size: 1.5rem;">{{ profile_user.username|slice:":1"|upper }}</div>
+          {% endif %}
+          <div>
+            <h5 class="mb-1">{{ profile_user.username }}</h5>
+            {% if profile.bio %}<p class="text-muted small mb-0">{{ profile.bio }}</p>{% endif %}
+            {% if profile.website %}<a href="{{ profile.website }}" target="_blank" rel="noopener" class="small">網站</a>{% endif %}
+          </div>
+        </div>
+        {% if user == profile_user %}
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-primary btn-sm mt-2">編輯檔案</a>
+        {% endif %}
+      </div>
+    </div>
+    <h6 class="mb-3">貼文</h6>
+    {% for post in posts %}
+    <article class="card shadow-sm mb-3">
+      <div class="card-body">
+        <p class="card-text">{{ post.content|linebreaksbr }}</p>
+        {% if post.image %}<img src="{{ post.image.url }}" alt="" class="img-fluid rounded">{% endif %}
+        <p class="text-muted small mb-0">{{ post.created_at|timesince }} 前</p>
+      </div>
+    </article>
+    {% empty %}
+    <p class="text-muted">尚無貼文。</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
