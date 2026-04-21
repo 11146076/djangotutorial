@@ -80,7 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'mysite.context_processors.wheel_categories',
+                'mysite.context_processors.wheel_tags',
             ],
         },
     },
