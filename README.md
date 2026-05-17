@@ -81,7 +81,6 @@ python manage.py createsuperuser
 celery -A mysite worker -l info -P solo
 ```
 
-> Windows 建議使用 `-P solo`，避免 prefork 相容性問題。
 
 **終端 B（Django）**
 ```powershell

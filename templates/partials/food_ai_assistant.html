@@ -1,4 +1,23 @@
+{% load i18n %}
 {# 等等吃啥 · AI 美食助理（登入後由 base 模板 include 載入） #}
+<script>
+  window.FOOD_AI_I18N = {
+    welcome: "{% filter escapejs %}{% trans "嗨，我是等等吃啥的美食助理。可以問我聚餐、口味、預算，或上傳食物照片一起討論。" %}{% endfilter %}",
+    loginRequired: "{% filter escapejs %}{% trans "請先登入後再使用 AI 助理。" %}{% endfilter %}",
+    imageReadError: "{% filter escapejs %}{% trans "抱歉：無法讀取圖片，請換一張再試。" %}{% endfilter %}",
+    pickImageOnly: "{% filter escapejs %}{% trans "請選擇圖片檔案" %}{% endfilter %}",
+    imageTooLarge: "{% filter escapejs %}{% trans "圖片請小於 5MB" %}{% endfilter %}",
+    compressStillLarge: "{% filter escapejs %}{% trans "壓縮後仍超過 5MB，請換一張較小的圖" %}{% endfilter %}",
+    compressFailed: "{% filter escapejs %}{% trans "圖片壓縮失敗，請換一張圖片再試。" %}{% endfilter %}",
+    emptyReply: "{% filter escapejs %}{% trans "（沒有回覆內容）" %}{% endfilter %}",
+    sorryPrefix: "{% filter escapejs %}{% trans "抱歉：" %}{% endfilter %}",
+    tryLater: "{% filter escapejs %}{% trans "請稍後再試" %}{% endfilter %}",
+    uploadedImage: "{% filter escapejs %}{% trans "（已上傳圖片）" %}{% endfilter %}",
+    quick1: "{% filter escapejs %}{% trans "等等吃啥？" %}{% endfilter %}",
+    quick2: "{% filter escapejs %}{% trans "月底吃土只有預算 100 怎麼吃？" %}{% endfilter %}",
+    quick3: "{% filter escapejs %}{% trans "少油少鹽可以怎麼吃？" %}{% endfilter %}",
+  };
+</script>
 <div
   class="font-sans"
   x-data="foodAiAssistant()"
@@ -9,7 +28,7 @@
     class="fixed bottom-5 left-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg ring-2 ring-white/30 transition hover:scale-105 hover:from-violet-400 hover:to-indigo-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:bottom-8 sm:left-8"
     aria-haspopup="dialog"
     :aria-expanded="open"
-    aria-label="開啟 AI 美食助理"
+    aria-label="{% trans "開啟 AI 美食助理" %}"
     @click="toggle()"
   >
     <i class="fa-solid fa-robot text-2xl" aria-hidden="true"></i>
@@ -41,23 +60,23 @@
             <i class="fa-solid fa-robot text-xl" aria-hidden="true"></i>
           </span>
           <div class="min-w-0">
-            <h2 id="food-ai-title" class="truncate text-base font-bold tracking-tight">美食 AI 助理</h2>
-            <p class="truncate text-xs text-violet-100">問聚餐、菜色、預算 · 可附圖</p>
+            <h2 id="food-ai-title" class="truncate text-base font-bold tracking-tight">{% trans "美食 AI 助理" %}</h2>
+            <p class="truncate text-xs text-violet-100">{% trans "問聚餐、菜色、預算 · 可附圖" %}</p>
           </div>
         </div>
         <div class="flex shrink-0 items-center gap-1">
           <button
             type="button"
             class="rounded-lg px-2 py-1.5 text-xs font-medium text-white/90 hover:bg-white/15"
-            title="清除對話"
+            title="{% trans "清除對話" %}"
             @click="clearConversation()"
           >
-            清除
+            {% trans "清除" %}
           </button>
           <button
             type="button"
             class="rounded-lg p-2 text-white/90 hover:bg-white/15"
-            aria-label="關閉"
+            aria-label="{% trans "關閉" %}"
             @click="open = false"
           >
             <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
@@ -67,7 +86,7 @@
 
       {# 快捷句 #}
       <div class="shrink-0 border-b border-slate-100 bg-slate-50/90 px-3 py-2">
-        <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">試試問</p>
+        <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">{% trans "試試問" %}</p>
         <div class="flex flex-wrap gap-1.5">
           <template x-for="(q, i) in quickPrompts" :key="i">
             <button
@@ -158,8 +177,8 @@
         <div x-show="pendingPreview" class="mb-2 flex items-start gap-2 rounded-lg bg-white p-2 ring-1 ring-slate-200">
           <img :src="pendingPreview" alt="" class="h-14 w-14 rounded-md object-cover" />
           <div class="flex flex-1 flex-col gap-1">
-            <span class="text-xs text-slate-500">待上傳圖片</span>
-            <button type="button" class="self-start text-xs font-medium text-rose-600 hover:underline" @click="clearImage()">移除</button>
+            <span class="text-xs text-slate-500">{% trans "待上傳圖片" %}</span>
+            <button type="button" class="self-start text-xs font-medium text-rose-600 hover:underline" @click="clearImage()">{% trans "移除" %}</button>
           </div>
         </div>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -167,7 +186,7 @@
             class="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 sm:shrink-0"
           >
             <i class="fa-solid fa-image text-violet-500" aria-hidden="true"></i>
-            照片
+            {% trans "照片" %}
             <input
               id="food-ai-file"
               type="file"
@@ -181,7 +200,7 @@
             x-model="input"
             rows="2"
             class="min-h-[3rem] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-inner outline-none ring-violet-200 placeholder:text-slate-400 focus:border-violet-400 focus:ring-2"
-            placeholder="輸入訊息…（Enter 送出，Shift+Enter 換行）"
+            placeholder="{% trans "輸入訊息…（Enter 送出，Shift+Enter 換行）" %}"
             :disabled="sending"
             @keydown.enter.prevent="!$event.shiftKey && sendMessage()"
           ></textarea>
@@ -192,7 +211,7 @@
             @click="sendMessage()"
           >
             <i class="fa-solid fa-paper-plane text-xs" aria-hidden="true"></i>
-            送出
+            {% trans "送出" %}
           </button>
         </div>
       </footer>

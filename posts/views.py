@@ -1,12 +1,11 @@
 import json
-import uuid
+import logging
 from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.core.files.base import ContentFile
 from django.db.models import Count, Exists, OuterRef, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,10 +16,10 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from urllib.parse import urlencode
 
-from .ai_chat import decode_client_image_base64, get_assistant_reply
+logger = logging.getLogger(__name__)
+
 from .forms import CategoryForm, PostEditForm, PostForm, TagForm
 from .models import (
-    AiChatLog,
     Category,
     Collection,
     CommentLike,
@@ -608,71 +607,3 @@ def collections_list(request):
         },
     )
 
-
-@require_POST
-def ai_chat(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "請先登入後再使用 AI 小幫手。"}, status=401)
-
-    content_type = (request.content_type or "").lower()
-    image_tuple = None  # (mime, raw_bytes) 傳給 AI 層；由 Base64 解碼或上傳檔案而來
-
-    # 前端預設：application/json，內含 message、history 陣列、選填 image_base64（Data URL 或純 base64）
-    if "application/json" in content_type:
-        try:
-            payload = json.loads(request.body.decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return JsonResponse({"error": "無效的 JSON 內容。"}, status=400)
-        if not isinstance(payload, dict):
-            return JsonResponse({"error": "請求格式錯誤。"}, status=400)
-        message = (payload.get("message") or "").strip()[:4000]
-        history = payload.get("history")
-        if not isinstance(history, list):
-            history = []
-        try:
-            image_tuple = decode_client_image_base64(payload.get("image_base64"))
-        except ValueError as exc:
-            return JsonResponse({"error": str(exc)}, status=400)
-    else:
-        # 相容舊版 multipart：仍可用檔案上傳（後端自行讀成 bytes）
-        message = (request.POST.get("message") or "").strip()[:4000]
-        history_raw = request.POST.get("history") or "[]"
-        try:
-            history = json.loads(history_raw)
-        except json.JSONDecodeError:
-            history = []
-        image = request.FILES.get("image")
-        if image:
-            if image.size > 5 * 1024 * 1024:
-                return JsonResponse({"error": "圖片請小於 5MB。"}, status=400)
-            ct = (getattr(image, "content_type", "") or "").lower()
-            if ct and ct not in ("image/jpeg", "image/png", "image/gif", "image/webp"):
-                return JsonResponse({"error": "請上傳 JPG、PNG、GIF 或 WebP 圖片。"}, status=400)
-            raw = image.read()
-            image_tuple = (ct or "image/jpeg", raw)
-
-    if image_tuple:
-        _mime, raw = image_tuple
-        if len(raw) > 5 * 1024 * 1024:
-            return JsonResponse({"error": "圖片請小於 5MB。"}, status=400)
-
-    if not message and not image_tuple:
-        return JsonResponse({"error": "請輸入文字或上傳圖片。"}, status=400)
-
-    reply, model_name = get_assistant_reply(message=message, image=image_tuple, history=history)
-
-    log = AiChatLog(user=request.user, message=message, assistant_reply=reply, model_name=model_name)
-    if image_tuple:
-        mime, raw = image_tuple
-        ext = "jpg"
-        if mime == "image/png":
-            ext = "png"
-        elif mime == "image/gif":
-            ext = "gif"
-        elif mime == "image/webp":
-            ext = "webp"
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        log.image.save(filename, ContentFile(raw), save=False)
-    log.save()
-
-    return JsonResponse({"reply": reply})

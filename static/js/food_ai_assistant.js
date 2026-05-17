@@ -9,14 +9,24 @@ document.addEventListener("alpine:init", () => {
     sending: false,
     pendingFile: null,
     pendingPreview: null,
-    quickPrompts: ["等等吃啥？", "月底吃土只有預算 100 怎麼吃？", "少油少鹽可以怎麼吃？"],
+    quickPrompts: [],
+
+    i18n() {
+      return window.FOOD_AI_I18N || {};
+    },
 
     init() {
+      const t = this.i18n();
+      this.quickPrompts = [t.quick1, t.quick2, t.quick3].filter(Boolean);
+      if (!this.quickPrompts.length) {
+        this.quickPrompts = ["等等吃啥？", "月底吃土只有預算 100 怎麼吃？", "少油少鹽可以怎麼吃？"];
+      }
       this.resetWelcome();
     },
 
     resetWelcome() {
       const welcomeText =
+        this.i18n().welcome ||
         "嗨，我是等等吃啥的美食助理。可以問我聚餐、口味、預算，或上傳食物照片一起討論。";
       // 預先算好 html：在 x-for 子作用域內若直接呼叫 renderMessageHtml 可能解析失敗
       this.messages = [
@@ -146,12 +156,12 @@ document.addEventListener("alpine:init", () => {
       const f = event.target.files && event.target.files[0];
       if (!f) return;
       if (!f.type || !f.type.startsWith("image/")) {
-        window.alert("請選擇圖片檔案");
+        window.alert(this.i18n().pickImageOnly || "請選擇圖片檔案");
         event.target.value = "";
         return;
       }
       if (f.size > 5 * 1024 * 1024) {
-        window.alert("圖片請小於 5MB");
+        window.alert(this.i18n().imageTooLarge || "圖片請小於 5MB");
         event.target.value = "";
         return;
       }
@@ -159,7 +169,7 @@ document.addEventListener("alpine:init", () => {
       try {
         const blob = await this.compressImage(f);
         if (blob.size > 5 * 1024 * 1024) {
-          window.alert("壓縮後仍超過 5MB，請換一張較小的圖");
+          window.alert(this.i18n().compressStillLarge || "壓縮後仍超過 5MB，請換一張較小的圖");
           event.target.value = "";
           return;
         }
@@ -171,7 +181,7 @@ document.addEventListener("alpine:init", () => {
         this.pendingPreview = URL.createObjectURL(blob);
       } catch (err) {
         console.error(err);
-        window.alert("圖片壓縮失敗，請換一張圖片再試。");
+        window.alert(this.i18n().compressFailed || "圖片壓縮失敗，請換一張圖片再試。");
         event.target.value = "";
       }
     },
@@ -249,7 +259,7 @@ document.addEventListener("alpine:init", () => {
 
       const endpoint = document.body.getAttribute("data-ai-chat-url");
       if (!endpoint) {
-        const t = "請先登入後再使用 AI 助理。";
+        const t = this.i18n().loginRequired || "請先登入後再使用 AI 助理。";
         this.messages.push({
           role: "assistant",
           text: t,
@@ -270,7 +280,7 @@ document.addEventListener("alpine:init", () => {
           displayImage = imageBase64;
         } catch (e) {
           this.sending = false;
-          const t = "抱歉：無法讀取圖片，請換一張再試。";
+          const t = this.i18n().imageReadError || "抱歉：無法讀取圖片，請換一張再試。";
           this.messages.push({
             role: "assistant",
             text: t,
@@ -281,7 +291,7 @@ document.addEventListener("alpine:init", () => {
         }
       }
 
-      const userText = text || (fileCopy ? "（已上傳圖片）" : "");
+      const userText = text || (fileCopy ? this.i18n().uploadedImage || "（已上傳圖片）" : "");
       this.messages.push({
         role: "user",
         text: userText,
@@ -326,14 +336,16 @@ document.addEventListener("alpine:init", () => {
         if (!res.ok) {
           throw new Error(data.error || res.statusText || "請求失敗");
         }
-        const replyText = this.withRetryHint(data.reply || "（沒有回覆內容）");
+        const replyText = this.withRetryHint(data.reply || this.i18n().emptyReply || "（沒有回覆內容）");
         this.messages.push({
           role: "assistant",
           text: replyText,
           html: this.renderMessageHtml(replyText),
         });
       } catch (e) {
-        const errText = this.withRetryHint("抱歉：" + (e.message || "請稍後再試"));
+        const errText = this.withRetryHint(
+          (this.i18n().sorryPrefix || "抱歉：") + (e.message || this.i18n().tryLater || "請稍後再試")
+        );
         this.messages.push({
           role: "assistant",
           text: errText,

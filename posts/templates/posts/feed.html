@@ -377,7 +377,7 @@
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <button
                   type="submit"
-                  class="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-rose-300 px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 sm:w-auto"
+                  class="inline-flex min-h-11 gap-1 items-center justify-center rounded-lg border border-rose-300 px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 sm:w-auto"
                   :disabled="submittingLike"
                 >
                   <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
@@ -394,7 +394,7 @@
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <button
                   type="submit"
-                  class="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
+                  class="inline-flex min-h-11 gap-1 items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
                   :disabled="submittingCollect"
                 >
                   <i x-show="!isCollected" class="fa-regular fa-bookmark" aria-hidden="true"></i>

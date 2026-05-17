@@ -9,6 +9,7 @@ from .ai_chat import (
     AIProviderError,
     _build_gemini_contents,
     _build_nvidia_messages,
+    _prepare_vision_image,
     call_gemini_generate,
     call_nvidia_chat_completions,
 )
@@ -72,9 +73,10 @@ def estimate_post_health(*, content: str, image: tuple[str, bytes] | None) -> tu
     gemini_model = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
 
     message_for_model = f"{HEALTH_ESTIMATE_SYSTEM_PROMPT}\n\n使用者內容：{user_message}"
+    vision_image = _prepare_vision_image(image)
 
     if nvidia_key:
-        msgs = _build_nvidia_messages([], message_for_model, image)
+        msgs = _build_nvidia_messages([], message_for_model, vision_image)
         msgs[0]["content"] = HEALTH_ESTIMATE_SYSTEM_PROMPT
         raw = call_nvidia_chat_completions(
             messages=msgs,
@@ -87,7 +89,7 @@ def estimate_post_health(*, content: str, image: tuple[str, bytes] | None) -> tu
         return _normalize_health_payload(_extract_json_dict(raw)), nvidia_model
 
     if gemini_key:
-        contents = _build_gemini_contents([], message_for_model, image)
+        contents = _build_gemini_contents([], message_for_model, vision_image)
         raw = call_gemini_generate(contents=contents, model=gemini_model, api_key=gemini_key)
         return _normalize_health_payload(_extract_json_dict(raw)), gemini_model
 
