@@ -25,6 +25,7 @@ admin.site.index_title = "系統管理"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("captcha/", include("captcha.urls")),
     path("api/v1/", include("posts.api.urls")),
     path("ckeditor/", include("mysite.ckeditor_urls")),
     path("accounts/", include("accounts.urls")),

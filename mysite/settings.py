@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "captcha",
 ]
 
 MIDDLEWARE = [
@@ -229,6 +230,15 @@ AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'posts:feed'
+
+# django-simple-captcha（登入／註冊圖片驗證碼）
+CAPTCHA_LENGTH = 5
+CAPTCHA_TIMEOUT = 5
+CAPTCHA_IMAGE_SIZE = (140, 48)
+CAPTCHA_FONT_SIZE = 30
+CAPTCHA_LETTER_ROTATION = (-25, 25)
+CAPTCHA_BACKGROUND_COLOR = "#f4f7f8"
+CAPTCHA_FOREGROUND_COLOR = "#0b2b30"
 
 # Google Gemini（美食助理）：金鑰來源 https://aistudio.google.com/app/apikey
 GEMINI_API_KEY = (
