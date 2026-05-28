@@ -278,7 +278,7 @@
             const n = this.tags.length;
             if (!n) return 'conic-gradient(from -90deg, #94a3b8 0deg 360deg)';
             const seg = 360 / n;
-            const colors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#22d3ee', '#818cf8', '#c084fc'];
+            const colors = ['#93ada7', '#a79f94', '#919db2', '#a891ab', '#9ca98f', '#92b3b8', '#aea392', '#88a7a2'];
             const stops = this.tags.map((_, i) => `${colors[i % colors.length]} ${i * seg}deg ${(i + 1) * seg}deg`).join(', ');
             return `conic-gradient(from -90deg, ${stops})`;
           },
