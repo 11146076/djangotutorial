@@ -1,0 +1,257 @@
+/**
+ * 等等吃啥 · SaaS 風格設計系統
+ * 深青綠 + 薄荷綠 CTA、白底卡片、圓角與柔和陰影
+ */
+:root {
+  --brand-teal: #0b2b30;
+  --brand-teal-soft: #134e4a;
+  --brand-mint: #4ade80;
+  --brand-mint-hover: #34d399;
+  --brand-surface: #ffffff;
+  --brand-muted: #f4f7f8;
+  --brand-border: rgba(11, 43, 48, 0.1);
+  --brand-text: #1e293b;
+  --brand-text-muted: #64748b;
+  --brand-shadow: 0 4px 24px -8px rgba(11, 43, 48, 0.12);
+  --brand-shadow-lg: 0 20px 50px -20px rgba(11, 43, 48, 0.18);
+  --brand-radius: 1rem;
+  --brand-radius-lg: 1.25rem;
+}
+
+body.saas-theme {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  color: var(--brand-text);
+  background: linear-gradient(180deg, #f8fafb 0%, #eef4f5 100%);
+  background-attachment: fixed;
+}
+
+/* —— 卡片 —— */
+.saas-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius-lg);
+  box-shadow: var(--brand-shadow);
+}
+
+.saas-card-muted {
+  background: var(--brand-muted);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius);
+}
+
+/* —— 按鈕 —— */
+.saas-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-teal);
+  background: linear-gradient(135deg, var(--brand-mint) 0%, var(--brand-mint-hover) 100%);
+  border: none;
+  box-shadow: 0 4px 14px -4px rgba(74, 222, 128, 0.55);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+
+.saas-btn-primary:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 8px 20px -6px rgba(74, 222, 128, 0.5);
+}
+
+.saas-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.saas-btn-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--brand-teal);
+  border: none;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.saas-btn-dark:hover {
+  background: var(--brand-teal-soft);
+}
+
+.saas-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  background: transparent;
+  border: 1px solid var(--brand-border);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.saas-btn-ghost:hover {
+  color: var(--brand-teal);
+  background: #fff;
+  border-color: rgba(11, 43, 48, 0.18);
+}
+
+/* —— 表單 —— */
+.saas-input,
+body.saas-theme input[type="text"],
+body.saas-theme input[type="password"],
+body.saas-theme input[type="email"],
+body.saas-theme input[type="search"],
+body.saas-theme select,
+body.saas-theme textarea:not(.cke_source) {
+  border-color: rgba(11, 43, 48, 0.15) !important;
+  border-radius: 0.75rem !important;
+}
+
+body.saas-theme input:focus,
+body.saas-theme select:focus,
+body.saas-theme textarea:focus {
+  outline: none;
+  border-color: var(--brand-teal-soft) !important;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25) !important;
+}
+
+/* —— 導覽連結 —— */
+.saas-nav-link {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.saas-nav-link:hover {
+  color: var(--brand-teal);
+  background: var(--brand-muted);
+}
+
+/* —— 頁尾 —— */
+.saas-footer {
+  background: var(--brand-teal);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.saas-footer a {
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.15s ease;
+}
+
+.saas-footer a:hover {
+  color: var(--brand-mint);
+}
+
+/* —— 標籤 pill —— */
+.saas-pill {
+  border-radius: 9999px;
+  background: var(--brand-muted);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-teal-soft);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.saas-pill:hover {
+  background: rgba(74, 222, 128, 0.2);
+  color: var(--brand-teal);
+}
+
+/* —— 區塊標題 —— */
+.saas-section-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--brand-teal);
+}
+
+/* —— 覆寫舊 sky 主色（減少逐檔修改） —— */
+body.saas-theme .bg-sky-500,
+body.saas-theme .bg-sky-400 {
+  background: linear-gradient(135deg, var(--brand-mint), var(--brand-mint-hover)) !important;
+  color: var(--brand-teal) !important;
+}
+
+body.saas-theme .hover\:bg-sky-600:hover,
+body.saas-theme .hover\:bg-sky-400:hover {
+  filter: brightness(1.05);
+}
+
+body.saas-theme .text-sky-600,
+body.saas-theme .text-sky-700 {
+  color: var(--brand-teal-soft) !important;
+}
+
+body.saas-theme .hover\:bg-sky-100:hover {
+  background: rgba(74, 222, 128, 0.15) !important;
+}
+
+body.saas-theme .hover\:text-sky-700:hover {
+  color: var(--brand-teal) !important;
+}
+
+body.saas-theme .ring-sky-200 {
+  --tw-ring-color: rgba(74, 222, 128, 0.35);
+}
+
+body.saas-theme .border-sky-300 {
+  border-color: rgba(19, 78, 74, 0.25) !important;
+}
+
+body.saas-theme article.rounded-xl.bg-white,
+body.saas-theme .rounded-xl.bg-white.shadow {
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--brand-shadow);
+}
+
+/* FAB */
+.saas-fab {
+  background: var(--brand-teal);
+  color: #fff;
+  box-shadow: var(--brand-shadow-lg);
+}
+
+.saas-fab:hover {
+  background: var(--brand-teal-soft);
+}
+
+.saas-fab-accent {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.saas-fab-accent:hover {
+  filter: brightness(1.08);
+}
+
+/* 登入／註冊驗證碼 */
+.auth-captcha img {
+  display: block;
+  height: 3rem;
+  width: auto;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--brand-shadow);
+}
+
+.auth-captcha input[type="text"] {
+  flex: 1;
+  min-width: 8rem;
+}

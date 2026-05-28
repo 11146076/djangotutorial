@@ -92,9 +92,26 @@
 
 {% block content %}
 <div class="mx-auto w-full max-w-3xl">
-  <div id="feed-top-snap" class="mb-4 rounded-xl bg-white p-4 shadow sm:p-5">
+  {% if not user.is_authenticated %}
+  <section class="saas-card mb-4 overflow-hidden p-6 sm:p-8">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-brand-teal-soft">美食社群</p>
+        <h1 class="mt-1 text-2xl font-bold text-brand-teal sm:text-3xl">發現下一餐吃什麼</h1>
+        <p class="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+          瀏覽動態、收藏靈感，登入後還能發文、使用 AI 助理與健康達人分析。
+        </p>
+      </div>
+      <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+        <a href="{% url 'accounts:register' %}" class="saas-btn-primary text-center">免費註冊</a>
+        <a href="{% url 'accounts:login' %}" class="saas-btn-ghost text-center">登入</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+  <div id="feed-top-snap" class="saas-card mb-4 p-4 sm:p-5">
     <div class="mb-3 flex items-center justify-between gap-3">
-      <p class="text-sm font-semibold text-slate-700">探索美食動態</p>
+      <p class="saas-section-title">探索美食動態</p>
       <button id="health-mode-toggle" type="button" class="health-mode-toggle" aria-pressed="false">
         <span class="health-mode-track"><span class="health-mode-thumb"></span></span>
         <span class="health-mode-label">健康達人</span>
@@ -105,12 +122,12 @@
         type="text"
         name="q"
         value="{{ search_query|default:'' }}"
-        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm"
+        class="saas-input min-h-11 w-full border px-3 py-2 text-base sm:text-sm"
         placeholder="搜尋貼文內容或發文者"
       >
       <div class="flex gap-2">
-        <button type="submit" class="min-h-11 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">搜尋</button>
-        <a href="{% url 'posts:feed' %}" class="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">清除</a>
+        <button type="submit" class="saas-btn-primary">搜尋</button>
+        <a href="{% url 'posts:feed' %}" class="saas-btn-ghost">清除</a>
       </div>
 
       <div id="feed-selected-categories-box" class="sm:col-span-2 {% if not selected_category_ids %}hidden{% endif %}">
@@ -180,10 +197,10 @@
   </div>
 
   {% if user.is_authenticated and not search_query %}
-    <details class="post-compose-details mb-4 overflow-hidden rounded-xl bg-white shadow" {% if form.errors %}open{% endif %}>
-      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-slate-50 sm:px-5">
+    <details class="post-compose-details saas-card mb-4 overflow-hidden" {% if form.errors %}open{% endif %}>
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-brand-muted sm:px-5">
         <div class="flex min-w-0 items-center gap-3">
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal">
             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
           </span>
           <div class="min-w-0 text-left">
@@ -248,7 +265,7 @@
             {{ form.gallery }}
             {% if form.gallery.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.gallery.errors.0 }}</p>{% endif %}
           </div>
-          <button type="submit" class="min-h-11 w-full rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-600 sm:w-auto">發布</button>
+          <button type="submit" class="saas-btn-primary w-full sm:w-auto">發布</button>
         </form>
       </div>
     </details>
@@ -256,7 +273,7 @@
 
   <div class="space-y-3 sm:space-y-4">
     {% for post in posts %}
-      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="{{ post.id }}" data-scroll-reveal>
+      <article class="saas-card relative overflow-hidden p-4 sm:p-5" data-post-article data-post-id="{{ post.id }}" data-scroll-reveal>
         <div class="mb-2 flex items-start gap-3">
           <a href="{% url 'accounts:profile_detail' post.author.username %}" class="shrink-0">
             {% if post.author.profile.avatar %}
@@ -282,7 +299,7 @@
                 {% for tag in post.tags.all %}
                   <a
                     href="{% url 'posts:feed' %}?tag={{ tag.id }}"
-                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                    class="saas-pill"
                   >#{{ tag.name }}</a>
                 {% endfor %}
               </div>
@@ -290,7 +307,7 @@
           </div>
 
           <div class="shrink-0 flex items-center gap-2">
-            <a href="{% url 'posts:post_detail' post.pk %}" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            <a href="{% url 'posts:post_detail' post.pk %}" class="saas-btn-ghost px-3 py-2 text-xs sm:text-sm">查看</a>
             {% if user.is_authenticated and user == post.author %}
               <a href="{% url 'posts:post_edit' post.pk %}" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">編輯</a>
               <a href="{% url 'posts:post_delete' post.pk %}" class="rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 sm:text-sm">刪除</a>

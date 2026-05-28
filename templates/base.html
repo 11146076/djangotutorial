@@ -5,8 +5,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}等等吃啥{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              teal: "#0b2b30",
+              "teal-soft": "#134e4a",
+              mint: "#4ade80",
+              muted: "#f4f7f8",
+            },
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+          },
+          boxShadow: {
+            saas: "0 4px 24px -8px rgba(11, 43, 48, 0.12)",
+            "saas-lg": "0 20px 50px -20px rgba(11, 43, 48, 0.18)",
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="{% static 'css/saas-theme.css' %}?v=20260526">
   <script src="{% static 'js/food_ai_assistant.js' %}"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <style>
@@ -286,36 +313,39 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body
-  class="min-h-dvh bg-slate-100 text-slate-800 antialiased pb-[env(safe-area-inset-bottom)]"
+  class="saas-theme min-h-dvh antialiased pb-[env(safe-area-inset-bottom)]"
   data-feed-list-url="{% url 'posts:feed' %}"
   {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts:ai_chat' %}"{% endif %}
 >
   {{ wheel_tag_items|json_script:"wheel-tag-items" }}
-  <nav class="sticky top-0 z-50 bg-sky-300 text-white shadow-sm" x-data="{ open: false }" @keydown.window.escape="open = false">
+  <nav class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-800 shadow-sm backdrop-blur-md" x-data="{ open: false }" @keydown.window.escape="open = false">
     <div class="mx-auto max-w-5xl px-3 sm:px-4">
       <div class="flex min-h-14 items-center justify-between gap-2 py-2 sm:min-h-16 sm:py-3">
-        <a class="shrink-0 text-2xl font-bold tracking-tight sm:text-3xl md:text-2xl flex items-center" href="{% url 'posts:feed' %}">🍽 等等吃啥</a>
+        <a class="flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight text-brand-teal sm:text-2xl" href="{% url 'posts:feed' %}">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-teal text-lg text-white shadow-saas">🍽</span>
+          <span>等等吃啥</span>
+        </a>
 
         {# 桌面版導覽 #}
-        <div class="hidden items-center gap-3 text-base font-semibold md:flex md:gap-4 md:text-lg">
-          <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'posts:feed' %}">首頁</a>
+        <div class="hidden items-center gap-1 md:flex md:gap-2">
+          <a class="saas-nav-link" href="{% url 'posts:feed' %}">首頁</a>
           {% if user.is_authenticated %}
-            <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'posts:collections_list' %}">我的收藏</a>
-            <a class="max-w-[10rem] truncate rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'accounts:profile_detail' user.username %}" title="{{ user.username }}">{{ user.username }}</a>
+            <a class="saas-nav-link" href="{% url 'posts:collections_list' %}">我的收藏</a>
+            <a class="saas-nav-link max-w-[10rem] truncate" href="{% url 'accounts:profile_detail' user.username %}" title="{{ user.username }}">{{ user.username }}</a>
             <form method="post" action="{% url 'accounts:logout' %}" class="m-0 inline">
               {% csrf_token %}
-              <button type="submit" class="cursor-pointer rounded-lg bg-white/15 px-3 py-2 text-base font-semibold text-white hover:bg-white/25 md:text-lg">登出</button>
+              <button type="submit" class="saas-btn-ghost cursor-pointer text-sm">登出</button>
             </form>
           {% else %}
-            <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'accounts:login' %}">登入</a>
-            <a class="rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25" href="{% url 'accounts:register' %}">註冊</a>
+            <a class="saas-nav-link" href="{% url 'accounts:login' %}">登入</a>
+            <a class="saas-btn-primary text-sm" href="{% url 'accounts:register' %}">註冊</a>
           {% endif %}
         </div>
 
         {# 手機版選單按鈕 #}
         <button
           type="button"
-          class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 p-2 md:hidden"
+          class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-slate-200 bg-brand-muted p-2 text-brand-teal md:hidden"
           @click="open = !open"
           :aria-expanded="open"
           aria-controls="mobile-nav"
@@ -331,7 +361,7 @@
       {# 手機版下拉選單 #}
       <div
         id="mobile-nav"
-        class="border-t border-white/25 py-2 md:hidden"
+        class="border-t border-slate-200 py-2 md:hidden"
         x-show="open"
         x-cloak
         x-transition:enter="transition ease-out duration-200"
@@ -342,29 +372,30 @@
         x-transition:leave-end="opacity-0 -translate-y-1"
       >
         <div class="flex flex-col gap-1 pb-2">
-          <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'posts:feed' %}" @click="open = false">首頁</a>
+          <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:feed' %}" @click="open = false">首頁</a>
           {% if user.is_authenticated %}
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'posts:collections_list' %}" @click="open = false">我的收藏</a>
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">個人頁面</a>
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'accounts:profile_edit' %}" @click="open = false">編輯檔案</a>
-            <form method="post" action="{% url 'accounts:logout' %}" class="m-0 w-full" @submit="open = false">
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:collections_list' %}" @click="open = false">我的收藏</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">個人頁面</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_edit' %}" @click="open = false">編輯檔案</a>
+            <form method="post" action="{% url 'accounts:logout' %}" class="m-0 w-full px-4 py-2" @submit="open = false">
               {% csrf_token %}
-              <button type="submit" class="min-h-11 w-full cursor-pointer rounded-lg bg-white/15 px-4 py-3 text-left text-base font-semibold text-white hover:bg-white/25">登出</button>
+              <button type="submit" class="saas-btn-ghost w-full cursor-pointer">登出</button>
             </form>
           {% else %}
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'accounts:login' %}" @click="open = false">登入</a>
-            <a class="min-h-11 rounded-lg bg-white/15 px-4 py-3 text-base font-semibold hover:bg-white/25" href="{% url 'accounts:register' %}" @click="open = false">註冊</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:login' %}" @click="open = false">登入</a>
+            <a class="saas-btn-primary mx-4 block text-center" href="{% url 'accounts:register' %}" @click="open = false">註冊</a>
           {% endif %}
         </div>
       </div>
     </div>
   </nav>
 
-  {# 標籤轉盤：圓形按鈕 + 彈窗 #}
+  {# 標籤轉盤：登入頁不顯示 #}
+  {% if request.resolver_match.view_name != 'accounts:login' %}
   <div x-data="eatWhatWheel()" @keydown.escape.window="open = false">
     <button
       type="button"
-      class="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg ring-2 ring-amber-200/80 transition hover:scale-105 hover:bg-amber-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 sm:bottom-8 sm:right-8"
+      class="saas-fab fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-mint/50 sm:bottom-8 sm:right-8"
       aria-haspopup="dialog"
       :aria-expanded="open"
       aria-label="開啟標籤轉盤"
@@ -388,9 +419,9 @@
       aria-labelledby="wheel-dialog-title"
     >
       <div class="absolute inset-0 bg-slate-900/50" @click="open = false; picked = null; result = ''" aria-hidden="true"></div>
-      <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+      <div class="relative z-10 w-full max-w-md saas-card p-5 sm:p-6">
         <div class="mb-4 flex items-start justify-between gap-3">
-          <h2 id="wheel-dialog-title" class="text-xl font-bold text-slate-800">隨機標籤轉轉</h2>
+          <h2 id="wheel-dialog-title" class="text-xl font-bold text-brand-teal">隨機標籤轉轉</h2>
           <button
             type="button"
             class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
@@ -432,13 +463,13 @@
         <p class="mt-4 min-h-[1.75rem] text-center text-sm text-slate-600" x-show="!tags.length">
           尚無已使用於貼文的標籤，發文時加上標籤後即可使用轉盤。
         </p>
-        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-sky-700 sm:text-lg" x-show="tags.length && result" x-text="result"></p>
+        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-brand-teal-soft sm:text-lg" x-show="tags.length && result" x-text="result"></p>
 
         <div class="mt-5 flex flex-col items-center gap-3" x-show="tags.length">
           <a
             x-show="picked && !spinning"
             x-cloak
-            class="inline-flex min-h-11 w-full max-w-xs items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-center text-base font-semibold text-white shadow hover:bg-emerald-500"
+            class="saas-btn-primary min-h-11 w-full max-w-xs px-6 py-3 text-center text-base"
             :href="picked ? browseTagUrl(picked) : '#'"
             :aria-label="picked ? '查看「' + picked.name + '」標籤的貼文列表' : '查看標籤貼文列表'"
           >
@@ -446,7 +477,7 @@
           </a>
           <button
             type="button"
-            class="rounded-xl bg-sky-500 px-8 py-3 text-base font-semibold text-white shadow hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+            class="saas-btn-dark px-8 py-3 text-base disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="spinning || !tags.length"
             @click="spin()"
           >
@@ -457,6 +488,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
   {% if user.is_authenticated %}
   {% include "partials/food_ai_assistant.html" %}
@@ -465,13 +497,51 @@
   <main class="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
     {% if messages %}
       {% for message in messages %}
-        <div class="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm sm:text-base">
+        <div class="saas-card mb-4 px-4 py-3 text-sm sm:text-base">
           {{ message }}
         </div>
       {% endfor %}
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+
+  <footer class="saas-footer mt-12 border-t border-brand-teal/20">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
+      <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+        <div class="sm:col-span-2">
+          <p class="text-lg font-bold text-white">🍽 等等吃啥</p>
+          <p class="mt-2 max-w-sm text-sm leading-relaxed text-white/70">
+            分享美食、探索靈感，用 AI 助理與健康達人模式，讓每一餐都更好決定。
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-white/50">探索</p>
+          <ul class="mt-3 space-y-2 text-sm">
+            <li><a href="{% url 'posts:feed' %}">動態牆</a></li>
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'posts:collections_list' %}">我的收藏</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-white/50">帳號</p>
+          <ul class="mt-3 space-y-2 text-sm">
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'accounts:profile_detail' user.username %}">個人頁面</a></li>
+              <li><a href="{% url 'accounts:profile_edit' %}">編輯檔案</a></li>
+            {% else %}
+              <li><a href="{% url 'accounts:login' %}">登入</a></li>
+              <li><a href="{% url 'accounts:register' %}">註冊</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+      <p class="mt-8 border-t border-white/10 pt-6 text-center text-xs text-white/45">
+        © {% now "Y" %} 等等吃啥 · 美食社群
+      </p>
+    </div>
+  </footer>
+
   <script>
     function postInteractBlock(isLikedInit, likeCountInit, isCollectedInit, collectionCountInit) {
       return {

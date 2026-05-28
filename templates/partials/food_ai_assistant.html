@@ -25,7 +25,7 @@
 >
   <button
     type="button"
-    class="fixed bottom-5 left-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg ring-2 ring-white/30 transition hover:scale-105 hover:from-violet-400 hover:to-indigo-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-300 sm:bottom-8 sm:left-8"
+    class="saas-fab-accent fixed bottom-5 left-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full text-white ring-2 ring-white/30 transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-mint/40 sm:bottom-8 sm:left-8"
     aria-haspopup="dialog"
     :aria-expanded="open"
     aria-label="{% trans "開啟 AI 美食助理" %}"
@@ -51,17 +51,17 @@
     <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" @click="open = false" aria-hidden="true"></div>
 
     <div
-      class="relative z-10 flex h-[min(85vh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xl ring-1 ring-slate-900/5"
+      class="relative z-10 flex h-[min(85vh,640px)] w-full max-w-lg flex-col overflow-hidden saas-card shadow-saas-lg"
     >
       {# 標題列 #}
-      <header class="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-white">
+      <header class="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-gradient-to-r from-brand-teal to-brand-teal-soft px-4 py-3 text-white">
         <div class="flex min-w-0 items-center gap-3">
           <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
             <i class="fa-solid fa-robot text-xl" aria-hidden="true"></i>
           </span>
           <div class="min-w-0">
             <h2 id="food-ai-title" class="truncate text-base font-bold tracking-tight">{% trans "美食 AI 助理" %}</h2>
-            <p class="truncate text-xs text-violet-100">{% trans "問聚餐、菜色、預算 · 可附圖" %}</p>
+            <p class="truncate text-xs text-white/75">{% trans "問聚餐、菜色、預算 · 可附圖" %}</p>
           </div>
         </div>
         <div class="flex shrink-0 items-center gap-1">
@@ -91,7 +91,7 @@
           <template x-for="(q, i) in quickPrompts" :key="i">
             <button
               type="button"
-              class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 shadow-sm hover:border-violet-300 hover:text-violet-700"
+              class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 shadow-sm hover:border-brand-mint hover:text-brand-teal"
               x-text="q"
               @click="useQuick(q)"
             ></button>
@@ -112,7 +112,7 @@
             >
               <div
                 x-show="m.role === 'assistant'"
-                class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600"
+                class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-muted text-brand-teal"
                 aria-hidden="true"
               >
                 <i class="fa-solid fa-robot text-sm"></i>
@@ -120,7 +120,7 @@
               <div
                 class="min-w-0 rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm"
                 :class="m.role === 'user'
-                  ? 'rounded-br-md bg-sky-500 text-white'
+                  ? 'rounded-br-md bg-brand-teal text-white'
                   : 'rounded-bl-md border border-slate-100 bg-white text-slate-800'"
               >
                 <template x-if="m.image">
@@ -150,7 +150,7 @@
           x-transition:leave-end="opacity-0 translate-y-1"
           class="flex justify-start gap-2"
         >
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-muted text-brand-teal">
             <i class="fa-solid fa-robot text-sm"></i>
           </div>
           <div class="food-ai-loader-bubble min-w-[156px] rounded-2xl rounded-bl-md border border-slate-200 px-4 py-3">
@@ -185,7 +185,7 @@
           <label
             class="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 sm:shrink-0"
           >
-            <i class="fa-solid fa-image text-violet-500" aria-hidden="true"></i>
+            <i class="fa-solid fa-image text-brand-teal" aria-hidden="true"></i>
             {% trans "照片" %}
             <input
               id="food-ai-file"
@@ -199,14 +199,14 @@
             data-food-ai-input
             x-model="input"
             rows="2"
-            class="min-h-[3rem] w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-inner outline-none ring-violet-200 placeholder:text-slate-400 focus:border-violet-400 focus:ring-2"
+            class="saas-input min-h-[3rem] w-full resize-none border px-3 py-2 text-sm shadow-inner placeholder:text-slate-400"
             placeholder="{% trans "輸入訊息…（Enter 送出，Shift+Enter 換行）" %}"
             :disabled="sending"
             @keydown.enter.prevent="!$event.shiftKey && sendMessage()"
           ></textarea>
           <button
             type="button"
-            class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+            class="saas-btn-primary shrink-0 px-5 py-2.5 disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="sending"
             @click="sendMessage()"
           >
