@@ -17,9 +17,14 @@ document.addEventListener("alpine:init", () => {
 
     init() {
       const t = this.i18n();
-      this.quickPrompts = [t.quick1, t.quick2, t.quick3].filter(Boolean);
+      this.quickPrompts = [t.quick1, t.quick2, t.quick3, t.quick4].filter(Boolean);
       if (!this.quickPrompts.length) {
-        this.quickPrompts = ["等等吃啥？", "月底吃土只有預算 100 怎麼吃？", "少油少鹽可以怎麼吃？"];
+        this.quickPrompts = [
+          "今天吃什麼？",
+          "等等吃啥？",
+          "月底吃土只有預算 100 怎麼吃？",
+          "少油少鹽可以怎麼吃？",
+        ];
       }
       this.resetWelcome();
     },
@@ -245,6 +250,23 @@ document.addEventListener("alpine:init", () => {
       if (el) el.scrollTop = el.scrollHeight;
     },
 
+    feedSuggestionUrl(s) {
+      const base = document.body.getAttribute("data-feed-list-url") || "/";
+      const u = new URL(base.replace(/\/?$/, "/"), window.location.origin);
+      if (s && s.type === "tag" && s.id) {
+        u.searchParams.set("tag", String(s.id));
+      } else {
+        u.searchParams.set("q", (s && (s.query || s.name)) || "");
+      }
+      return u.pathname + u.search;
+    },
+
+    suggestionLabel(s) {
+      const name = (s && (s.name || s.query)) || "";
+      const tpl = this.i18n().viewRelatedPosts || "查看「{name}」相關貼文";
+      return tpl.replace("{name}", name);
+    },
+
     withRetryHint(message) {
       const text = String(message || "");
       const isTransient = /(timeout|逾時|429|502|503|504|上游暫時性錯誤)/i.test(text);
@@ -337,10 +359,12 @@ document.addEventListener("alpine:init", () => {
           throw new Error(data.error || res.statusText || "請求失敗");
         }
         const replyText = this.withRetryHint(data.reply || this.i18n().emptyReply || "（沒有回覆內容）");
+        const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
         this.messages.push({
           role: "assistant",
           text: replyText,
           html: this.renderMessageHtml(replyText),
+          suggestions,
         });
       } catch (e) {
         const errText = this.withRetryHint(

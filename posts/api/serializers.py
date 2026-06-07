@@ -83,3 +83,7 @@ class AiChatMultipartSerializer(serializers.Serializer):
 
 class AiChatResponseSerializer(serializers.Serializer):
     reply = serializers.CharField()
+    suggestions = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+    )

@@ -13,9 +13,11 @@
     sorryPrefix: "{% filter escapejs %}{% trans "抱歉：" %}{% endfilter %}",
     tryLater: "{% filter escapejs %}{% trans "請稍後再試" %}{% endfilter %}",
     uploadedImage: "{% filter escapejs %}{% trans "（已上傳圖片）" %}{% endfilter %}",
-    quick1: "{% filter escapejs %}{% trans "等等吃啥？" %}{% endfilter %}",
-    quick2: "{% filter escapejs %}{% trans "月底吃土只有預算 100 怎麼吃？" %}{% endfilter %}",
-    quick3: "{% filter escapejs %}{% trans "少油少鹽可以怎麼吃？" %}{% endfilter %}",
+    quick1: "{% filter escapejs %}{% trans "今天吃什麼？" %}{% endfilter %}",
+    quick2: "{% filter escapejs %}{% trans "等等吃啥？" %}{% endfilter %}",
+    quick3: "{% filter escapejs %}{% trans "月底吃土只有預算 100 怎麼吃？" %}{% endfilter %}",
+    quick4: "{% filter escapejs %}{% trans "少油少鹽可以怎麼吃？" %}{% endfilter %}",
+    viewRelatedPosts: "{% filter escapejs %}{% trans "查看「{name}」相關貼文" %}{% endfilter %}",
   };
 </script>
 <div
@@ -135,6 +137,22 @@
                   :class="m.role === 'user' ? '[&_strong]:font-bold [&_strong]:text-white' : ''"
                   x-html="m.html"
                 ></p>
+                <div
+                  x-show="m.role === 'assistant' && m.suggestions && m.suggestions.length"
+                  class="mt-2.5 flex flex-col gap-1.5 border-t border-slate-100 pt-2"
+                >
+                  <p class="text-[11px] font-medium text-slate-400">{% trans "推薦貼文" %}</p>
+                  <template x-for="(s, si) in (m.suggestions || [])" :key="si">
+                    <a
+                      :href="feedSuggestionUrl(s)"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-brand-muted px-2.5 py-1.5 text-xs font-medium text-brand-teal transition hover:bg-brand-mint/20"
+                      @click="open = false"
+                    >
+                      <i class="fa-solid fa-utensils text-[10px]" aria-hidden="true"></i>
+                      <span x-text="suggestionLabel(s)"></span>
+                    </a>
+                  </template>
+                </div>
               </div>
             </div>
           </div>

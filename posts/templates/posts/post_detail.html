@@ -92,9 +92,11 @@
             {% endfor %}
           </div>
         </div>
+        {% if user.is_authenticated %}
         {% include "posts/_health_badge.html" with insight=post.latest_health_insight inline=False %}
+        {% endif %}
       </div>
-    {% elif post.latest_health_insight and post.latest_health_insight.status == "completed" %}
+    {% elif user.is_authenticated and post.latest_health_insight and post.latest_health_insight.status == "completed" %}
       {% include "posts/_health_badge.html" with insight=post.latest_health_insight inline=True %}
     {% endif %}
 
@@ -221,8 +223,10 @@
 <script src="{% static 'js/apple_carousel.js' %}?v=20260421b"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    {% if user.is_authenticated %}
     const enabled = window.localStorage.getItem("feed-health-mode-enabled") === "1";
     document.documentElement.classList.toggle("health-mode-on", enabled);
+    {% endif %}
     if (window.initAppleCarousels) {
       window.initAppleCarousels();
     }

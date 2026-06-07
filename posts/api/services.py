@@ -9,6 +9,7 @@ from django.core.files.base import ContentFile
 
 from posts.ai_chat import get_assistant_reply
 from posts.models import AiChatLog
+from posts.recommendations import build_post_suggestions
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -20,7 +21,7 @@ def run_ai_chat(
     message: str,
     history: list[Any],
     image_tuple: tuple[str, bytes] | None,
-) -> dict[str, str]:
+) -> dict[str, str | list[dict[str, str | int]]]:
     logger.info(
         "ai_chat request user_id=%s has_image=%s message_len=%d history_len=%d",
         user.pk,
@@ -45,4 +46,8 @@ def run_ai_chat(
         log.image.save(filename, ContentFile(raw), save=False)
     log.save()
 
-    return {"reply": reply}
+    suggestions = build_post_suggestions(reply)
+    result: dict[str, str | list[dict[str, str | int]]] = {"reply": reply}
+    if suggestions:
+        result["suggestions"] = suggestions
+    return result

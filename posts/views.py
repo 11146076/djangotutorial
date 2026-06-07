@@ -121,8 +121,11 @@ def feed(request):
         posts = posts.filter(visibility=Post.VISIBILITY_PUBLIC)
     if search_query:
         posts = posts.filter(
-            Q(content__icontains=search_query) | Q(author__username__icontains=search_query)
-        )
+            Q(content__icontains=search_query)
+            | Q(title__icontains=search_query)
+            | Q(author__username__icontains=search_query)
+            | Q(tags__name__icontains=search_query)
+        ).distinct()
         if request.user.is_authenticated:
             last = (
                 SearchLog.objects.filter(user=request.user, keyword=search_query)

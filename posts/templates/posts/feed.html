@@ -99,7 +99,7 @@
         <p class="text-xs font-semibold uppercase tracking-wider text-brand-teal-soft">美食社群</p>
         <h1 class="mt-1 text-2xl font-bold text-brand-teal sm:text-3xl">發現下一餐吃什麼</h1>
         <p class="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
-          瀏覽動態、收藏靈感，登入後還能發文、使用 AI 助理與健康達人分析。
+          登入後即可瀏覽美食動態、發文、使用 AI 助理與健康達人分析。
         </p>
       </div>
       <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
@@ -108,7 +108,7 @@
       </div>
     </div>
   </section>
-  {% endif %}
+  {% else %}
   <div id="feed-top-snap" class="saas-card mb-4 p-4 sm:p-5">
     <div class="mb-3 flex items-center justify-between gap-3">
       <p class="saas-section-title">探索美食動態</p>
@@ -196,7 +196,7 @@
     {% endif %}
   </div>
 
-  {% if user.is_authenticated and not search_query %}
+  {% if not search_query %}
     <details class="post-compose-details saas-card mb-4 overflow-hidden" {% if form.errors %}open{% endif %}>
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-brand-muted sm:px-5">
         <div class="flex min-w-0 items-center gap-3">
@@ -351,9 +351,11 @@
                 {% endfor %}
               </div>
             </div>
+            {% if user.is_authenticated %}
             {% include "posts/_health_badge.html" with insight=post.latest_health_insight inline=False %}
+            {% endif %}
           </div>
-        {% elif post.latest_health_insight and post.latest_health_insight.status == "completed" %}
+        {% elif user.is_authenticated and post.latest_health_insight and post.latest_health_insight.status == "completed" %}
           {% include "posts/_health_badge.html" with insight=post.latest_health_insight inline=True %}
         {% endif %}
 
@@ -483,7 +485,7 @@
       </article>
     {% empty %}
       <div class="rounded-xl bg-white px-6 py-10 text-center text-slate-500 shadow sm:px-10 sm:py-12">
-        <p class="text-sm sm:text-base">尚無貼文，{% if user.is_authenticated %}來發第一篇吧！{% else %}登入後即可發文與互動。{% endif %}</p>
+        <p class="text-sm sm:text-base">尚無貼文，來發第一篇吧！</p>
       </div>
     {% endfor %}
   </div>
@@ -501,7 +503,6 @@
       </div>
     </nav>
   {% endif %}
-</div>
 
 <button
   id="feed-new-posts-btn"
@@ -510,6 +511,8 @@
 >
   回到最上方
 </button>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
