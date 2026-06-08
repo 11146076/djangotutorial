@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-{# 強制夜晚模式：不載入 theme.js，避免使用者切換主題 #}
+{# 強制深色後台，與前台 SaaS 深色版一致 #}
 {% block dark-mode-vars %}
 <link rel="stylesheet" href="{% static "admin/css/dark_mode.css" %}">
 <script>
@@ -16,14 +16,14 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'css/admin_custom.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_custom.css' %}?v=20260528b">
 {% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block branding %}
@@ -32,8 +32,8 @@
     <span class="eatwhat-admin-logo__mark" aria-hidden="true">🍽</span>
     <span class="eatwhat-admin-logo__text">
       等等吃啥
+      <span class="eatwhat-admin-logo__sub">管理後台</span>
     </span>
-    <span class="eatwhat-admin-logo__sub">管理後台</span>
   </a>
 </h1>
 {% endblock %}

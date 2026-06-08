@@ -589,16 +589,58 @@ def tag_delete(request, pk):
 
 @login_required(login_url=settings.LOGIN_URL)
 def collections_list(request):
+    visibility_filter = Q(post__visibility=Post.VISIBILITY_PUBLIC) | Q(
+        post__author_id=request.user.id
+    )
+    base_collections = Collection.objects.filter(user=request.user).filter(
+        visibility_filter
+    )
+
+    category_raw = (request.GET.get("category") or "").strip()
+    selected_category_id = None
+    if category_raw.isdigit():
+        cid = int(category_raw)
+        if base_collections.filter(post__category_id=cid).exists():
+            selected_category_id = cid
+
+    collections = base_collections
+    if selected_category_id:
+        collections = collections.filter(post__category_id=selected_category_id)
+
     collections = (
-        Collection.objects.filter(user=request.user)
-        .filter(Q(post__visibility=Post.VISIBILITY_PUBLIC) | Q(post__author_id=request.user.id))
-        .select_related("post", "post__author", "post__author__profile", "post__category")
+        collections.select_related(
+            "post", "post__author", "post__author__profile", "post__category"
+        )
         .prefetch_related("post__tags")
         .order_by("-created_at")
     )
     posts = [c.post for c in collections]
     paginator = Paginator(posts, 20)
     page_obj = paginator.get_page((request.GET.get("page") or "").strip() or 1)
+
+    filter_categories = (
+        Category.objects.filter(
+            posts__collections__user=request.user,
+        )
+        .filter(
+            Q(posts__visibility=Post.VISIBILITY_PUBLIC)
+            | Q(posts__author_id=request.user.id)
+        )
+        .annotate(
+            collected_count=Count(
+                "posts__collections",
+                filter=Q(posts__collections__user=request.user)
+                & (
+                    Q(posts__visibility=Post.VISIBILITY_PUBLIC)
+                    | Q(posts__author_id=request.user.id)
+                ),
+                distinct=True,
+            )
+        )
+        .order_by("name")
+        .distinct()
+    )
+
     return render(
         request,
         "posts/collections.html",
@@ -607,6 +649,8 @@ def collections_list(request):
             "collections_count": paginator.count,
             "page_obj": page_obj,
             "paginator": paginator,
+            "filter_categories": filter_categories,
+            "selected_category_id": selected_category_id,
         },
     )
 
