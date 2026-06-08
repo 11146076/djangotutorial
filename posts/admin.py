@@ -108,7 +108,6 @@ def export_posts_csv(modeladmin, request, queryset):
     return response
 
 
-@eatwhat_admin.register(Post)
 class PostAdmin(ExportMixin, admin.ModelAdmin):
     resource_classes = [PostResource]
     inlines = [CommentInline, PostHealthInsightInline]
@@ -184,7 +183,6 @@ class PostAdmin(ExportMixin, admin.ModelAdmin):
         return text or "—"
 
 
-@eatwhat_admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "post_count")
     search_fields = ("name",)
@@ -198,7 +196,6 @@ class CategoryAdmin(admin.ModelAdmin):
         return obj._post_count
 
 
-@eatwhat_admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "post_count")
     search_fields = ("name",)
@@ -212,7 +209,6 @@ class TagAdmin(admin.ModelAdmin):
         return obj._post_count
 
 
-@eatwhat_admin.register(CommentLike)
 class CommentLikeAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "comment", "created_at")
     list_filter = ("created_at",)
@@ -223,7 +219,6 @@ class CommentLikeAdmin(admin.ModelAdmin):
     show_full_result_count = False
 
 
-@eatwhat_admin.register(PostComment)
 class PostCommentAdmin(admin.ModelAdmin):
     list_display = ("id", "post", "author", "content_short", "like_count", "created_at")
     list_filter = ("created_at", "is_pinned", "is_locked")
@@ -242,7 +237,6 @@ class PostCommentAdmin(admin.ModelAdmin):
         return text
 
 
-@eatwhat_admin.register(Like)
 class LikeAdmin(admin.ModelAdmin):
     list_display = ("id", "post", "user", "created_at")
     list_filter = ("created_at",)
@@ -253,7 +247,6 @@ class LikeAdmin(admin.ModelAdmin):
     show_full_result_count = False
 
 
-@eatwhat_admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
     list_display = ("id", "follower", "following", "created_at")
     list_filter = ("created_at",)
@@ -264,7 +257,6 @@ class FollowAdmin(admin.ModelAdmin):
     show_full_result_count = False
 
 
-@eatwhat_admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "post", "created_at")
     list_filter = ("created_at",)
@@ -275,7 +267,6 @@ class CollectionAdmin(admin.ModelAdmin):
     show_full_result_count = False
 
 
-@eatwhat_admin.register(SearchLog)
 class SearchLogAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "keyword", "created_at")
     list_filter = ("created_at",)
@@ -287,7 +278,6 @@ class SearchLogAdmin(admin.ModelAdmin):
     show_full_result_count = False
 
 
-@eatwhat_admin.register(AiChatLog)
 class AiChatLogAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -358,7 +348,6 @@ def queue_insight_reanalysis(modeladmin, request, queryset):
     modeladmin.message_user(request, f"已為 {queued} 篇貼文重新排程健康分析。")
 
 
-@eatwhat_admin.register(PostHealthInsight)
 class PostHealthInsightAdmin(admin.ModelAdmin):
     list_display = ("id", "post", "health_rank", "calories", "status", "model_name", "created_at")
     list_filter = ("health_rank", "status", "created_at")
@@ -388,3 +377,16 @@ class PostHealthInsightAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+eatwhat_admin.register(Post, PostAdmin)
+eatwhat_admin.register(Category, CategoryAdmin)
+eatwhat_admin.register(Tag, TagAdmin)
+eatwhat_admin.register(CommentLike, CommentLikeAdmin)
+eatwhat_admin.register(PostComment, PostCommentAdmin)
+eatwhat_admin.register(Like, LikeAdmin)
+eatwhat_admin.register(Follow, FollowAdmin)
+eatwhat_admin.register(Collection, CollectionAdmin)
+eatwhat_admin.register(SearchLog, SearchLogAdmin)
+eatwhat_admin.register(AiChatLog, AiChatLogAdmin)
+eatwhat_admin.register(PostHealthInsight, PostHealthInsightAdmin)

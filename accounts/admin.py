@@ -14,7 +14,6 @@ class ProfileInline(admin.StackedInline):
     fields = ("avatar", "bio", "dietary_preference")
 
 
-@eatwhat_admin.register(User)
 class UserAdmin(DjangoUserAdmin):
     inlines = (ProfileInline,)
     list_display = ("username", "email", "role", "post_count", "is_staff", "is_active", "created_at")
@@ -38,7 +37,6 @@ class UserAdmin(DjangoUserAdmin):
         return obj._post_count
 
 
-@eatwhat_admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "dietary_preference", "has_avatar")
     search_fields = ("user__username", "user__email", "dietary_preference", "bio")
@@ -48,3 +46,7 @@ class ProfileAdmin(admin.ModelAdmin):
     @admin.display(description="有大頭貼", boolean=True)
     def has_avatar(self, obj):
         return bool(obj.avatar)
+
+
+eatwhat_admin.register(User, UserAdmin)
+eatwhat_admin.register(Profile, ProfileAdmin)
