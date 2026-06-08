@@ -16,15 +16,14 @@ Including another URLconf
 """
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
 
-admin.site.site_header = "等等吃啥 管理後台"
-admin.site.site_title = "等等吃啥 Admin"
-admin.site.index_title = "系統管理"
+from mysite.admin_site import eatwhat_admin
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("admin/", eatwhat_admin.urls),
+    path("captcha/", include("captcha.urls")),
+    path("api/v1/", include("posts.api.urls")),
     path("ckeditor/", include("mysite.ckeditor_urls")),
     path("accounts/", include("accounts.urls")),
     path("", include("posts.urls")),

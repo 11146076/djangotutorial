@@ -5,77 +5,347 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}等等吃啥{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              teal: "#0b2b30",
+              "teal-soft": "#134e4a",
+              mint: "#4ade80",
+              muted: "#f4f7f8",
+            },
+          },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+          },
+          boxShadow: {
+            saas: "0 4px 24px -8px rgba(11, 43, 48, 0.12)",
+            "saas-lg": "0 20px 50px -20px rgba(11, 43, 48, 0.18)",
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="{% static 'css/saas-theme.css' %}?v=20260526">
   <script src="{% static 'js/food_ai_assistant.js' %}"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <style>html body [x-cloak] { display: none; }</style>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    html body [x-cloak] { display: none; }
+    .apple-hover-card,
+    .apple-hover-btn {
+      transform: translateZ(0);
+      transition:
+        transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform, box-shadow;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .apple-hover-card:hover {
+        transform: translateY(-6px) scale(1.012);
+        box-shadow:
+          0 20px 35px -18px rgb(15 23 42 / 0.38),
+          0 10px 16px -12px rgb(15 23 42 / 0.24);
+      }
+      .apple-hover-btn:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow:
+          0 10px 18px -12px rgb(15 23 42 / 0.35),
+          0 6px 10px -8px rgb(15 23 42 / 0.2);
+      }
+    }
+    .apple-hover-btn:active {
+      transform: translateY(0) scale(0.985);
+      transition-duration: 140ms;
+    }
+    .scroll-reveal-item {
+      opacity: 0;
+      transform: translateY(28px);
+      transition:
+        opacity 760ms ease,
+        transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: opacity, transform;
+    }
+    .scroll-reveal-item.scroll-revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .apple-hover-card,
+      .apple-hover-btn {
+        transform: none !important;
+        transition: none !important;
+      }
+      .scroll-reveal-item {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* Food AI assistant loading animation (from provided source, safely scoped). */
+    .food-ai-loader-bubble {
+      background: #f1f5f9;
+    }
+    .food-ai-loading-root {
+      font-family: "Roboto", sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .food-ai-loading-root .food-ai-loading-scalebox,
+    .food-ai-loading-root .divider,
+    .food-ai-loading-root .loading-text,
+    .food-ai-loading-root .loading-text::before,
+    .food-ai-loading-root .loading-text .letter,
+    .food-ai-loading-root .loading-text .letter::before {
+      box-sizing: border-box;
+    }
+    .food-ai-loading-root .food-ai-loading-scalebox {
+      position: relative;
+      width: 240px;
+      height: 120px;
+      transform: scale(0.34);
+      transform-origin: left top;
+      margin-right: -155px;
+      margin-bottom: -78px;
+      margin-top: -6px;
+      pointer-events: none;
+    }
+    .food-ai-loading-root .divider {
+      position: absolute;
+      z-index: 2;
+      top: 65px;
+      left: 200px;
+      width: 50px;
+      height: 15px;
+      background: #f1f5f9;
+    }
+    .food-ai-loading-root .loading-text {
+      position: relative;
+      font-size: 3.75rem;
+      font-weight: 300;
+      margin: 0;
+      white-space: nowrap;
+      color: #334155;
+    }
+    .food-ai-loading-root .loading-text::before {
+      position: absolute;
+      content: "";
+      z-index: 1;
+      top: 40px;
+      left: 115px;
+      width: 6px;
+      height: 6px;
+      background: #334155;
+      border-radius: 50%;
+      animation: dotMove 1800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) infinite;
+    }
+    .food-ai-loading-root .loading-text .letter {
+      display: inline-block;
+      position: relative;
+      color: #334155;
+      letter-spacing: 8px;
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(1) {
+      transform-origin: 100% 70%;
+      transform: scale(1, 1.275);
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(1)::before {
+      position: absolute;
+      content: "";
+      top: 22px;
+      left: 0;
+      width: 14px;
+      height: 36px;
+      background: #f1f5f9;
+      transform-origin: 100% 0;
+      animation: lineStretch 1800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) infinite;
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(5) {
+      transform-origin: 100% 70%;
+      animation: letterStretch 1800ms cubic-bezier(0.25, 0.23, 0.73, 0.75) infinite;
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(5)::before {
+      position: absolute;
+      content: "";
+      top: 15px;
+      left: 2px;
+      width: 9px;
+      height: 15px;
+      background: #f1f5f9;
+    }
+    @keyframes dotMove {
+      0%, 100% {
+        transform: rotate(180deg) translate(-110px, -10px) rotate(-180deg);
+      }
+      50% {
+        transform: rotate(0deg) translate(-111px, 10px) rotate(0deg);
+      }
+    }
+    @keyframes letterStretch {
+      0%, 100% {
+        transform: scale(1, 0.35);
+        transform-origin: 100% 75%;
+      }
+      8%, 28% {
+        transform: scale(1, 2.125);
+        transform-origin: 100% 67%;
+      }
+      37% {
+        transform: scale(1, 0.875);
+        transform-origin: 100% 75%;
+      }
+      46% {
+        transform: scale(1, 1.03);
+        transform-origin: 100% 75%;
+      }
+      50%, 97% {
+        transform: scale(1);
+        transform-origin: 100% 75%;
+      }
+    }
+    @keyframes lineStretch {
+      0%, 45%, 70%, 100% {
+        transform: scaleY(0.125);
+      }
+      49% {
+        transform: scaleY(0.75);
+      }
+      50% {
+        transform: scaleY(0.875);
+      }
+      53% {
+        transform: scaleY(0.5);
+      }
+      60% {
+        transform: scaleY(0);
+      }
+      68% {
+        transform: scaleY(0.18);
+      }
+    }
+  </style>
   <script>
     document.addEventListener('alpine:init', () => {
-      Alpine.data('eatWhatWheel', () => ({
-        open: false,
-        rotation: 0,
-        spinning: false,
-        labels: ['中式', '日式', '美式', '火鍋', '便當', '拉麵', '咖啡', '隨便'],
-        result: '',
-        wheelGradient() {
-          const n = this.labels.length;
-          const seg = 360 / n;
-          const colors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#22d3ee', '#818cf8', '#c084fc'];
-          const stops = this.labels.map((_, i) => `${colors[i % colors.length]} ${i * seg}deg ${(i + 1) * seg}deg`).join(', ');
-          return `conic-gradient(from -90deg, ${stops})`;
-        },
-        spin() {
-          if (this.spinning) return;
-          this.spinning = true;
-          this.result = '';
-          const n = this.labels.length;
-          const winner = Math.floor(Math.random() * n);
-          const seg = 360 / n;
-          const extra = 360 * (5 + Math.floor(Math.random() * 3));
-          const currentMod = ((this.rotation % 360) + 360) % 360;
-          // 轉盤用 transform: rotate(-rotation)；指針在左邊（從 12 點順時針 270°）
-          const POINTER_DEG = 270;
-          const targetMod = (((winner + 0.5) * seg - POINTER_DEG) % 360 + 360) % 360;
-          let delta = targetMod - currentMod;
-          if (delta < 0) delta += 360;
-          this.rotation += extra + delta;
-          window.setTimeout(() => {
-            this.result = `今天就吃「${this.labels[winner + 2]}」吧！`;
-            this.spinning = false;
-          }, 4000);
-        },
-      }));
+      Alpine.data('eatWhatWheel', () => {
+        const el = document.getElementById('wheel-tag-items');
+        let tags = [];
+        if (el && el.textContent) {
+          try {
+            tags = JSON.parse(el.textContent);
+          } catch (e) {
+            tags = [];
+          }
+        }
+        const feedListUrl = (document.body.dataset.feedListUrl || '/').replace(/\/?$/, '/');
+        return {
+          open: false,
+          rotation: 0,
+          spinning: false,
+          tags,
+          feedListUrl,
+          result: '',
+          picked: null,
+          browseTagUrl(tag) {
+            const u = new URL(this.feedListUrl, window.location.origin);
+            u.searchParams.set('tag', String(tag.id));
+            return u.pathname + u.search + u.hash;
+          },
+          /** 依目前 rotation 反推指針（左側 270°）下的分區；與 conic from -90deg、分區中心角 (i+0.5)*seg-90 一致 */
+          segmentIndexUnderPointer() {
+            const n = this.tags.length;
+            if (!n) return 0;
+            const seg = 360 / n;
+            const R = ((this.rotation % 360) + 360) % 360;
+            const norm = (a) => ((a % 360) + 360) % 360;
+            const thetaAtPointer = norm(270 + R);
+            const shifted = norm(thetaAtPointer + 90);
+            let i = Math.floor(shifted / seg);
+            if (i >= n) i = n - 1;
+            return i;
+          },
+          wheelGradient() {
+            const n = this.tags.length;
+            if (!n) return 'conic-gradient(from -90deg, #94a3b8 0deg 360deg)';
+            const seg = 360 / n;
+            const colors = ['#93ada7', '#a79f94', '#919db2', '#a891ab', '#9ca98f', '#92b3b8', '#aea392', '#88a7a2'];
+            const stops = this.tags.map((_, i) => `${colors[i % colors.length]} ${i * seg}deg ${(i + 1) * seg}deg`).join(', ');
+            return `conic-gradient(from -90deg, ${stops})`;
+          },
+          spin() {
+            if (this.spinning || !this.tags.length) return;
+            this.spinning = true;
+            this.picked = null;
+            this.result = '';
+            const n = this.tags.length;
+            const winner = Math.floor(Math.random() * n);
+            const seg = 360 / n;
+            const extra = 360 * (5 + Math.floor(Math.random() * 3));
+            const currentMod = ((this.rotation % 360) + 360) % 360;
+            const POINTER_DEG = 270;
+            const segmentCenterDeg = (winner + 0.5) * seg - 90;
+            const targetMod = ((segmentCenterDeg - POINTER_DEG) % 360 + 360) % 360;
+            let delta = targetMod - currentMod;
+            if (delta < 0) delta += 360;
+            this.rotation += extra + delta;
+            window.setTimeout(() => {
+              const idx = this.segmentIndexUnderPointer();
+              const chosen = this.tags[idx];
+              this.picked = chosen;
+              this.result = `結果：「${chosen.name}」`;
+              this.spinning = false;
+            }, 4000);
+          },
+        };
+      });
     });
   </script>
   {% block extra_head %}{% endblock %}
 </head>
 <body
-  class="min-h-dvh bg-slate-100 text-slate-800 antialiased pb-[env(safe-area-inset-bottom)]"
+  class="saas-theme min-h-dvh antialiased pb-[env(safe-area-inset-bottom)]{% if not user.is_authenticated %} flex flex-col{% endif %}"
+  data-feed-list-url="{% url 'posts:feed' %}"
   {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts:ai_chat' %}"{% endif %}
 >
-  <nav class="sticky top-0 z-50 bg-sky-300 text-white shadow-sm" x-data="{ open: false }" @keydown.window.escape="open = false">
+  {{ wheel_tag_items|json_script:"wheel-tag-items" }}
+  <nav class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-800 shadow-sm backdrop-blur-md" x-data="{ open: false }" @keydown.window.escape="open = false">
     <div class="mx-auto max-w-5xl px-3 sm:px-4">
       <div class="flex min-h-14 items-center justify-between gap-2 py-2 sm:min-h-16 sm:py-3">
-        <a class="shrink-0 text-2xl font-bold tracking-tight sm:text-3xl md:text-2xl flex items-center" href="{% url 'posts:feed' %}">🍽 等等吃啥</a>
+        <a class="flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight text-brand-teal sm:text-2xl" href="{% url 'posts:feed' %}">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-teal text-lg text-white shadow-saas">🍽</span>
+          <span>等等吃啥</span>
+        </a>
 
         {# 桌面版導覽 #}
-        <div class="hidden items-center gap-3 text-base font-semibold md:flex md:gap-4 md:text-lg">
-          <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'posts:feed' %}">首頁</a>
+        <div class="hidden items-center gap-1 md:flex md:gap-2">
+          <a class="saas-nav-link" href="{% url 'posts:feed' %}">首頁</a>
           {% if user.is_authenticated %}
-            <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'posts:collections_list' %}">我的收藏</a>
-            <a class="max-w-[10rem] truncate rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'accounts:profile_detail' user.username %}" title="{{ user.username }}">{{ user.username }}</a>
-            <a class="rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25" href="{% url 'accounts:logout' %}">登出</a>
+            <a class="saas-nav-link" href="{% url 'posts:collections_list' %}">我的收藏</a>
+            <a class="saas-nav-link max-w-[10rem] truncate" href="{% url 'accounts:profile_detail' user.username %}" title="{{ user.username }}">{{ user.username }}</a>
+            <form method="post" action="{% url 'accounts:logout' %}" class="m-0 inline">
+              {% csrf_token %}
+              <button type="submit" class="saas-btn-ghost cursor-pointer text-sm">登出</button>
+            </form>
           {% else %}
-            <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="{% url 'accounts:login' %}">登入</a>
-            <a class="rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25" href="{% url 'accounts:register' %}">註冊</a>
+            <a class="saas-nav-link" href="{% url 'accounts:login' %}">登入</a>
+            <a class="saas-btn-primary text-sm" href="{% url 'accounts:register' %}">註冊</a>
           {% endif %}
         </div>
 
         {# 手機版選單按鈕 #}
         <button
           type="button"
-          class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 p-2 md:hidden"
+          class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-slate-200 bg-brand-muted p-2 text-brand-teal md:hidden"
           @click="open = !open"
           :aria-expanded="open"
           aria-controls="mobile-nav"
@@ -91,7 +361,7 @@
       {# 手機版下拉選單 #}
       <div
         id="mobile-nav"
-        class="border-t border-white/25 py-2 md:hidden"
+        class="border-t border-slate-200 py-2 md:hidden"
         x-show="open"
         x-cloak
         x-transition:enter="transition ease-out duration-200"
@@ -102,30 +372,34 @@
         x-transition:leave-end="opacity-0 -translate-y-1"
       >
         <div class="flex flex-col gap-1 pb-2">
-          <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'posts:feed' %}" @click="open = false">首頁</a>
+          <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:feed' %}" @click="open = false">首頁</a>
           {% if user.is_authenticated %}
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'posts:collections_list' %}" @click="open = false">我的收藏</a>
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">個人頁面</a>
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'accounts:profile_edit' %}" @click="open = false">編輯檔案</a>
-            <a class="min-h-11 rounded-lg bg-white/15 px-4 py-3 text-base font-semibold hover:bg-white/25" href="{% url 'accounts:logout' %}">登出</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:collections_list' %}" @click="open = false">我的收藏</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">個人頁面</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_edit' %}" @click="open = false">編輯檔案</a>
+            <form method="post" action="{% url 'accounts:logout' %}" class="m-0 w-full px-4 py-2" @submit="open = false">
+              {% csrf_token %}
+              <button type="submit" class="saas-btn-ghost w-full cursor-pointer">登出</button>
+            </form>
           {% else %}
-            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="{% url 'accounts:login' %}" @click="open = false">登入</a>
-            <a class="min-h-11 rounded-lg bg-white/15 px-4 py-3 text-base font-semibold hover:bg-white/25" href="{% url 'accounts:register' %}" @click="open = false">註冊</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:login' %}" @click="open = false">登入</a>
+            <a class="saas-btn-primary mx-4 block text-center" href="{% url 'accounts:register' %}" @click="open = false">註冊</a>
           {% endif %}
         </div>
       </div>
     </div>
   </nav>
 
-  {# 吃什麼轉盤：圓形按鈕 + 彈窗 #}
+  {# 標籤轉盤：登入頁不顯示 #}
+  {% if request.resolver_match.view_name != 'accounts:login' %}
   <div x-data="eatWhatWheel()" @keydown.escape.window="open = false">
     <button
       type="button"
-      class="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg ring-2 ring-amber-200/80 transition hover:scale-105 hover:bg-amber-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 sm:bottom-8 sm:right-8"
+      class="saas-fab fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-mint/50 sm:bottom-8 sm:right-8"
       aria-haspopup="dialog"
       :aria-expanded="open"
-      aria-label="開啟今天吃什麼轉盤"
-      @click="open = true"
+      aria-label="開啟標籤轉盤"
+      @click="open = true; picked = null; result = ''"
     >
       <i class="fa-solid fa-dharmachakra text-2xl" aria-hidden="true"></i>
     </button>
@@ -144,15 +418,15 @@
       aria-modal="true"
       aria-labelledby="wheel-dialog-title"
     >
-      <div class="absolute inset-0 bg-slate-900/50" @click="open = false" aria-hidden="true"></div>
-      <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+      <div class="absolute inset-0 bg-slate-900/50" @click="open = false; picked = null; result = ''" aria-hidden="true"></div>
+      <div class="relative z-10 w-full max-w-md saas-card p-5 sm:p-6">
         <div class="mb-4 flex items-start justify-between gap-3">
-          <h2 id="wheel-dialog-title" class="text-xl font-bold text-slate-800">今天吃什麼？</h2>
+          <h2 id="wheel-dialog-title" class="text-xl font-bold text-brand-teal">隨機標籤轉轉</h2>
           <button
             type="button"
             class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
             aria-label="關閉"
-            @click="open = false"
+            @click="open = false; picked = null; result = ''"
           >
             <i class="fa-solid fa-xmark text-xl" aria-hidden="true"></i>
           </button>
@@ -170,11 +444,11 @@
                 :style="{ transform: `rotate(-${rotation}deg)` }"
               >
                 <div class="absolute inset-0 rounded-full" :style="{ background: wheelGradient() }"></div>
-                <template x-for="(label, i) in labels" :key="i">
+                <template x-for="(t, i) in tags" :key="t.id">
                   <span
                     class="pointer-events-none absolute left-1/2 top-1/2 w-[5.5rem] text-center text-[11px] font-bold leading-tight text-white drop-shadow [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] sm:w-24 sm:text-sm"
-                    :style="`transform: translate(-50%, -50%) rotate(${i * (360 / labels.length) + (360 / labels.length) / 2 - 90}deg) translateY(-100px)`"
-                    x-text="label"
+                    :style="`transform: translate(-50%, -50%) rotate(${i * (360 / tags.length) + (360 / tags.length) / 2 - 90}deg) translateY(-100px)`"
+                    x-text="t.name"
                   ></span>
                 </template>
               </div>
@@ -186,13 +460,25 @@
           </div>
         </div>
 
-        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-sky-700 sm:text-lg" x-text="result"></p>
+        <p class="mt-4 min-h-[1.75rem] text-center text-sm text-slate-600" x-show="!tags.length">
+          尚無已使用於貼文的標籤，發文時加上標籤後即可使用轉盤。
+        </p>
+        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-brand-teal-soft sm:text-lg" x-show="tags.length && result" x-text="result"></p>
 
-        <div class="mt-5 flex justify-center">
+        <div class="mt-5 flex flex-col items-center gap-3" x-show="tags.length">
+          <a
+            x-show="picked && !spinning"
+            x-cloak
+            class="saas-btn-primary min-h-11 w-full max-w-xs px-6 py-3 text-center text-base"
+            :href="picked ? browseTagUrl(picked) : '#'"
+            :aria-label="picked ? '查看「' + picked.name + '」標籤的貼文列表' : '查看標籤貼文列表'"
+          >
+            查看該標籤的貼文列表
+          </a>
           <button
             type="button"
-            class="rounded-xl bg-sky-500 px-8 py-3 text-base font-semibold text-white shadow hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
-            :disabled="spinning"
+            class="saas-btn-dark px-8 py-3 text-base disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="spinning || !tags.length"
             @click="spin()"
           >
             <span x-show="!spinning">開始轉！</span>
@@ -202,21 +488,423 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
   {% if user.is_authenticated %}
   {% include "partials/food_ai_assistant.html" %}
   {% endif %}
 
-  <main class="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
+  <main class="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6{% if not user.is_authenticated %} flex-1{% endif %}">
     {% if messages %}
       {% for message in messages %}
-        <div class="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm sm:text-base">
+        <div class="saas-card mb-4 px-4 py-3 text-sm sm:text-base">
           {{ message }}
         </div>
       {% endfor %}
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+
+  <footer class="saas-footer{% if user.is_authenticated %} mt-12{% endif %} border-t border-brand-teal/20">
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12">
+      <div class="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+        <div class="sm:col-span-2">
+          <p class="text-lg font-bold text-white">🍽 等等吃啥</p>
+          <p class="mt-2 max-w-sm text-sm leading-relaxed text-white/70">
+            分享美食、探索靈感，用 AI 助理與健康達人模式，讓每一餐都更好決定。
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-white/50">探索</p>
+          <ul class="mt-3 space-y-2 text-sm">
+            <li><a href="{% url 'posts:feed' %}">動態牆</a></li>
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'posts:collections_list' %}">我的收藏</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-white/50">帳號</p>
+          <ul class="mt-3 space-y-2 text-sm">
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'accounts:profile_detail' user.username %}">個人頁面</a></li>
+              <li><a href="{% url 'accounts:profile_edit' %}">編輯檔案</a></li>
+            {% else %}
+              <li><a href="{% url 'accounts:login' %}">登入</a></li>
+              <li><a href="{% url 'accounts:register' %}">註冊</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+      <p class="mt-8 border-t border-white/10 pt-6 text-center text-xs text-white/45">
+        © {% now "Y" %} 等等吃啥 · 美食社群
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    function postInteractBlock(isLikedInit, likeCountInit, isCollectedInit, collectionCountInit) {
+      return {
+        isLiked: !!isLikedInit,
+        count: Number(likeCountInit) || 0,
+        isCollected: !!isCollectedInit,
+        collectionCount: Number(collectionCountInit) || 0,
+        showMsg: false,
+        msgText: "",
+        hideTimer: null,
+        submittingLike: false,
+        submittingCollect: false,
+        bumpMsg(text) {
+          this.msgText = text;
+          this.showMsg = true;
+          if (this.hideTimer) clearTimeout(this.hideTimer);
+          this.hideTimer = setTimeout(() => {
+            this.showMsg = false;
+          }, 2000);
+        },
+        async submitLike(event) {
+          event.preventDefault();
+          if (this.submittingLike) return;
+          this.submittingLike = true;
+          const form = event.currentTarget;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            if (!response.ok) throw new Error("bad");
+            const data = await response.json();
+            this.isLiked = !!data.is_liked;
+            this.count = Number(data.like_count) || 0;
+            this.bumpMsg(this.isLiked ? "已按讚" : "已取消按讚");
+          } catch (e) {
+            this.bumpMsg("操作失敗，請稍後再試");
+          } finally {
+            this.submittingLike = false;
+          }
+        },
+        async submitCollect(event) {
+          event.preventDefault();
+          if (this.submittingCollect) return;
+          this.submittingCollect = true;
+          const form = event.currentTarget;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            if (!response.ok) throw new Error("bad");
+            const data = await response.json();
+            this.isCollected = !!data.is_collected;
+            this.collectionCount = Number(data.collection_count) || 0;
+            this.bumpMsg(this.isCollected ? "已收藏" : "已取消收藏");
+          } catch (e) {
+            this.bumpMsg("操作失敗，請稍後再試");
+          } finally {
+            this.submittingCollect = false;
+          }
+        },
+      };
+    }
+
+    function commentLikeBlock(isLikedInit, countInit) {
+      return {
+        isLiked: !!isLikedInit,
+        count: Number(countInit) || 0,
+        showMsg: false,
+        msgText: "",
+        hideTimer: null,
+        submitting: false,
+        bumpMsg(text) {
+          this.msgText = text;
+          this.showMsg = true;
+          if (this.hideTimer) clearTimeout(this.hideTimer);
+          this.hideTimer = setTimeout(() => {
+            this.showMsg = false;
+          }, 2000);
+        },
+        async submitCommentLike(event) {
+          event.preventDefault();
+          if (this.submitting) return;
+          this.submitting = true;
+          const form = event.currentTarget;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            if (!response.ok) throw new Error("bad");
+            const data = await response.json();
+            this.isLiked = !!data.is_liked;
+            this.count = Number(data.like_count) || 0;
+            this.bumpMsg(this.isLiked ? "已按讚" : "已取消按讚");
+          } catch (e) {
+            this.bumpMsg("操作失敗，請稍後再試");
+          } finally {
+            this.submitting = false;
+          }
+        },
+      };
+    }
+
+    function initCommentCreateForms() {
+      function getDirectReplyToggle(commentEl) {
+        if (!commentEl) return null;
+        for (const child of Array.from(commentEl.children || [])) {
+          if (child && child.dataset && child.dataset.replyToggle !== undefined) {
+            return child;
+          }
+        }
+        return null;
+      }
+
+      function getAlpineState(el) {
+        if (!el) return null;
+        if (el.__x && el.__x.$data) return el.__x.$data;
+        if (Array.isArray(el._x_dataStack) && el._x_dataStack.length) {
+          return el._x_dataStack[0] || null;
+        }
+        return null;
+      }
+
+      function openAndBumpReplyCounts(commentEl) {
+        let cursor = commentEl;
+        while (cursor) {
+          const toggle = getDirectReplyToggle(cursor);
+          const state = getAlpineState(toggle);
+          if (state) {
+            state.replyCount = Number(state.replyCount || 0) + 1;
+            state.showReplies = true;
+          }
+          const parentChildrenBox = cursor.closest("[data-comment-children]");
+          if (!parentChildrenBox) break;
+          const parentId = parentChildrenBox.getAttribute("data-comment-children");
+          cursor = parentId ? document.querySelector(`[data-comment-id="${parentId}"]`) : null;
+        }
+      }
+
+      document.querySelectorAll(".js-comment-create-form").forEach((form) => {
+        if (form.dataset.ajaxBound === "1") return;
+        form.dataset.ajaxBound = "1";
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn && submitBtn.disabled) return;
+          if (submitBtn) submitBtn.disabled = true;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            let data = {};
+            try {
+              data = await response.json();
+            } catch (parseErr) {
+              data = {};
+            }
+            if (!response.ok || data.ok !== true) {
+              const err = data.error || "送出失敗";
+              let tip = form.querySelector(".js-comment-form-tip");
+              if (!tip) {
+                tip = document.createElement("p");
+                tip.className = "js-comment-form-tip mt-1 text-xs text-rose-600";
+                form.appendChild(tip);
+              }
+              tip.textContent = err;
+              setTimeout(() => {
+                tip.textContent = "";
+              }, 3000);
+              return;
+            }
+            const article = form.closest("[data-post-article]");
+            const list = article ? article.querySelector("[data-post-comments-list]") : null;
+            const countEl = article ? article.querySelector("[data-post-comment-count]") : null;
+
+            const tmp = document.createElement("div");
+            tmp.innerHTML = data.html;
+            const fragment = tmp.firstElementChild;
+            if (!fragment) return;
+
+            if (data.parent_id) {
+              const parentEl = article && article.querySelector(`[data-comment-id="${data.parent_id}"]`);
+              if (parentEl) {
+                const childrenBox = parentEl.querySelector(`[data-comment-children="${data.parent_id}"]`);
+                if (childrenBox) {
+                  childrenBox.classList.remove("hidden");
+                  childrenBox.appendChild(fragment);
+                  openAndBumpReplyCounts(parentEl);
+                  if (window.Alpine && typeof window.Alpine.initTree === "function") {
+                    window.Alpine.initTree(fragment);
+                  }
+                  initCommentCreateForms();
+                }
+              }
+            } else if (list) {
+              const emptyPh = list.querySelector("[data-comments-empty-placeholder]");
+              if (emptyPh) emptyPh.remove();
+              list.appendChild(fragment);
+              if (window.Alpine && typeof window.Alpine.initTree === "function") {
+                window.Alpine.initTree(fragment);
+              }
+              initCommentCreateForms();
+            }
+
+            if (countEl && typeof data.comment_count === "number") {
+              const countValueEl = countEl.querySelector("[data-post-comment-count-value]");
+              if (countValueEl) {
+                countValueEl.textContent = `${data.comment_count} 留言`;
+              } else {
+                countEl.textContent = `${data.comment_count} 留言`;
+              }
+            }
+            form.reset();
+            const okTip = form.querySelector(".js-comment-form-tip");
+            if (okTip) okTip.textContent = "";
+            const replyFormWrap = form.closest("[data-reply-form-wrap]");
+            const replyFormState = getAlpineState(replyFormWrap);
+            if (replyFormState && "showReplyForm" in replyFormState) {
+              replyFormState.showReplyForm = false;
+            }
+          } catch (e) {
+            form.submit();
+          } finally {
+            if (submitBtn) submitBtn.disabled = false;
+          }
+        });
+      });
+    }
+
+    function initPostImageGalleries() {
+      document.querySelectorAll("article[data-post-article]").forEach((article) => {
+        if (article.dataset.galleryReady === "1") return;
+        const postBody = article.querySelector(".post-body");
+        if (!postBody) return;
+
+        const bodyImages = Array.from(postBody.querySelectorAll("img"));
+        const coverImages = Array.from(article.querySelectorAll(".post-cover-image"));
+        const allImages = [...bodyImages, ...coverImages].filter(
+          (img, idx, arr) => img && !img.closest(".image-gallery") && arr.indexOf(img) === idx
+        );
+        if (!allImages.length) return;
+
+        const gallery = document.createElement("div");
+        gallery.className = "image-gallery mt-3 flex w-full gap-3 overflow-x-auto snap-x snap-mandatory pb-2";
+
+        allImages.forEach((img) => {
+          const oldParent = img.parentElement;
+          img.className =
+            "mx-auto max-h-[300px] w-auto max-w-full rounded-lg object-contain bg-slate-50";
+          const slide = document.createElement("div");
+          slide.className = "flex min-w-full shrink-0 snap-center items-center justify-center";
+          slide.appendChild(img);
+          gallery.appendChild(slide);
+          if (
+            oldParent &&
+            oldParent.tagName === "P" &&
+            oldParent.querySelectorAll("img").length === 0 &&
+            !oldParent.textContent.trim()
+          ) {
+            oldParent.remove();
+          }
+        });
+
+        article.querySelectorAll(".post-cover-image").forEach((img) => {
+          const wrap = img.parentElement;
+          if (
+            wrap &&
+            wrap !== gallery &&
+            (wrap.tagName === "DIV" || wrap.tagName === "P") &&
+            wrap.querySelectorAll("img").length === 0 &&
+            !wrap.textContent.trim()
+          ) {
+            wrap.remove();
+          }
+        });
+
+        postBody.insertAdjacentElement("afterend", gallery);
+        article.dataset.galleryReady = "1";
+      });
+    }
+
+    function initAppleHoverEffects() {
+      const cardSelectors = [
+        "[data-post-article]",
+        ".post-compose-details",
+        "#feed-top-snap",
+      ];
+      const buttonSelectors = [
+        "main button",
+        "main input[type='submit']",
+        "main a.rounded-lg",
+        "main a.rounded-xl",
+        "#feed-new-posts-btn",
+      ];
+      document.querySelectorAll(cardSelectors.join(",")).forEach((el) => {
+        el.classList.add("apple-hover-card");
+      });
+      document.querySelectorAll(buttonSelectors.join(",")).forEach((el) => {
+        if (el.classList.contains("rounded-full")) return;
+        el.classList.add("apple-hover-btn");
+      });
+    }
+
+    function initScrollReveal() {
+      const items = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
+      if (!items.length) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        items.forEach((el) => el.classList.add("scroll-revealed"));
+        return;
+      }
+      if (!("IntersectionObserver" in window)) {
+        items.forEach((el) => el.classList.add("scroll-revealed"));
+        return;
+      }
+
+      items.forEach((el, index) => {
+        el.classList.add("scroll-reveal-item");
+        el.style.transitionDelay = `${Math.min(index * 40, 220)}ms`;
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("scroll-revealed");
+            observer.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.14,
+          rootMargin: "0px 0px -6% 0px",
+        }
+      );
+      items.forEach((el) => observer.observe(el));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initCommentCreateForms();
+      initPostImageGalleries();
+      initAppleHoverEffects();
+      initScrollReveal();
+    });
+  </script>
+  {% include "partials/page_submit_loading_overlay.html" %}
   {% block extra_js %}{% endblock %}
 </body>
 </html>

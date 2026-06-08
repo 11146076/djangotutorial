@@ -36,6 +36,11 @@
         {% if form.category.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.category.errors.0 }}</p>{% endif %}
       </div>
       <div>
+        <label for="{{ form.visibility.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">誰可以看到</label>
+        {{ form.visibility }}
+        {% if form.visibility.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.visibility.errors.0 }}</p>{% endif %}
+      </div>
+      <div>
         <label for="{{ form.new_category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">新增分類</label>
         {{ form.new_category }}
         {% if form.new_category.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.new_category.errors.0 }}</p>{% endif %}
@@ -43,10 +48,11 @@
       </div>
 
       <div>
-        <label for="{{ form.tags.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">標籤</label>
-        {{ form.tags }}
+        <fieldset class="min-w-0 border-0 p-0">
+          <legend class="mb-2 text-sm font-medium text-slate-600">標籤（多選）</legend>
+          {{ form.tags }}
+        </fieldset>
         {% if form.tags.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.tags.errors.0 }}</p>{% endif %}
-        <p class="mt-1 text-xs text-slate-500">按住 Ctrl（Windows）或 Command（Mac）可多選。</p>
       </div>
       <div>
         <label for="{{ form.new_tags.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">新增標籤</label>
@@ -64,9 +70,17 @@
       </div>
 
       <div>
-        <label for="{{ form.image.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">圖片</label>
-        {{ form.image }}
-        {% if form.image.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.image.errors.0 }}</p>{% endif %}
+        <label for="{{ form.gallery.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">貼文附圖（最多 3 張）</label>
+        {% if post.gallery_images %}
+          <div class="mb-2 flex flex-wrap gap-2">
+            {% for img in post.gallery_images %}
+              <img src="{{ img.url }}" alt="" class="h-20 w-20 rounded-lg border border-slate-200 object-cover">
+            {% endfor %}
+          </div>
+          <p class="mb-2 text-xs text-slate-500">重新選擇檔案會取代目前的附圖；不選則維持原圖。</p>
+        {% endif %}
+        {{ form.gallery }}
+        {% if form.gallery.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.gallery.errors.0 }}</p>{% endif %}
       </div>
 
       <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">

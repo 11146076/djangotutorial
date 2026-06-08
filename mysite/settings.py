@@ -29,12 +29,14 @@ except ImportError:
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y4i_3xy6scex!lpnodg*4h5ot=eg+m-%rc9c47)!&j%cv^7-zu'
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-only-change-me").strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "false").strip().lower() in ("1", "true", "yes", "on")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "").split(",") if h.strip()]
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -52,6 +54,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "captcha",
 ]
 
 MIDDLEWARE = [
@@ -78,6 +82,7 @@ TEMPLATES = [
                 'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'mysite.context_processors.wheel_tags',
             ],
         },
     },
@@ -131,10 +136,82 @@ LANGUAGES = [
     ('zh-hant', '繁體中文'),
 ]
 
+LOCALE_PATHS = [BASE_DIR / "locale"]
+
 USE_I18N = True
 
 USE_TZ = True
 
+# Logging（開發：console；正式：可改為檔案 handler）
+_LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG" if DEBUG else "INFO").strip().upper()
+_LOG_DIR = BASE_DIR / "logs"
+_LOG_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "ai_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": _LOG_DIR / "ai.log",
+            "maxBytes": 2 * 1024 * 1024,
+            "backupCount": 3,
+            "encoding": "utf-8",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "posts.ai_chat": {
+            "handlers": ["console", "ai_file"],
+            "level": _LOG_LEVEL,
+            "propagate": False,
+        },
+        "posts.views": {
+            "handlers": ["console"],
+            "level": _LOG_LEVEL,
+            "propagate": False,
+        },
+        "posts.api": {
+            "handlers": ["console", "ai_file"],
+            "level": _LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+}
+
+# Django REST Framework
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.MultiPartParser",
+        "rest_framework.parsers.FormParser",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+    "EXCEPTION_HANDLER": "posts.api.exceptions.api_exception_handler",
+}
+
+if DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
+        "rest_framework.renderers.BrowsableAPIRenderer"
+    )
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -154,13 +231,27 @@ AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'posts:feed'
 
+# django-simple-captcha（登入／註冊圖片驗證碼）
+CAPTCHA_LENGTH = 5
+CAPTCHA_TIMEOUT = 5
+CAPTCHA_IMAGE_SIZE = (140, 48)
+CAPTCHA_FONT_SIZE = 30
+CAPTCHA_LETTER_ROTATION = (-25, 25)
+CAPTCHA_BACKGROUND_COLOR = "#f4f7f8"
+CAPTCHA_FOREGROUND_COLOR = "#0b2b30"
+
 # Google Gemini（美食助理）：金鑰來源 https://aistudio.google.com/app/apikey
 GEMINI_API_KEY = (
-    os.environ.get("NVIDIA_API_KEY", "").strip()
-    or os.environ.get("api_key", "").strip()
+    os.environ.get("GEMINI_API_KEY", "").strip()
+    # Back-compat：第三組 key 改名時也可沿用（例如 NVIDIA_BACKUP_API_KEY2）
+    or os.environ.get("NVIDIA_BACKUP_API_KEY2", "").strip()
 )
 # 例如 gemini-2.0-flash、gemini-1.5-flash（需帳戶可用模型）
-GEMINI_MODEL = os.environ.get("NVIDIA_MODEL", "nvidia/nemotron-3-nano-30b-a3b")
+GEMINI_MODEL = (
+    os.environ.get("GEMINI_MODEL", "").strip()
+    or os.environ.get("NVIDIA_BACKUP_MODEL2", "").strip()
+    or "gemini-2.0-flash"
+)
 
 # NVIDIA Integrate（OpenAI 風格 Chat Completions）
 NVIDIA_API_KEY = (
@@ -172,6 +263,18 @@ NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "qwen/qwen3.5-397b-a17b").strip()
 NVIDIA_INVOKE_URL = os.environ.get(
     "NVIDIA_INVOKE_URL", "https://integrate.api.nvidia.com/v1/chat/completions"
 ).strip()
+NVIDIA_BACKUP_API_KEY = os.environ.get("NVIDIA_BACKUP_API_KEY", "").strip()
+NVIDIA_BACKUP_MODEL = os.environ.get("NVIDIA_BACKUP_MODEL", NVIDIA_MODEL).strip()
+AI_REQUEST_TIMEOUT_SECONDS = int(os.environ.get("AI_REQUEST_TIMEOUT_SECONDS", "35").strip() or "35")
+
+# Celery（背景任務：健康達人分析）
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0").strip()
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/1").strip()
+CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "0").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 # CKEditor（富文字 + 圖片上傳）
 CKEDITOR_UPLOAD_PATH = "ckeditor_uploads/"

@@ -1,31 +1,82 @@
 import json
-import re
+import logging
 from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from urllib.parse import urlencode
 
-from accounts.models import Profile
+logger = logging.getLogger(__name__)
 
-from .ai_chat import get_assistant_reply
 from .forms import CategoryForm, PostEditForm, PostForm, TagForm
-from .models import Category, Collection, Like, Post, PostComment, SearchLog, Tag
+from .models import (
+    Category,
+    Collection,
+    CommentLike,
+    Like,
+    Post,
+    PostComment,
+    SearchLog,
+    Tag,
+)
+from .tasks import analyze_post_health_task
+
+
+def _wants_json(request):
+    """前端用 fetch 並帶 Accept: application/json（或 X-Requested-With）時，視為要 JSON 而非整頁導向。"""
+    return (
+        request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("accept", "").lower()
+    )
+
+
+def _parse_positive_id_list(values):
+    """從 GET 多值參數整理出不重複的正整數 id 列表（保順序）。"""
+    seen = set()
+    out = []
+    for raw in values:
+        s = str(raw).strip()
+        if not s.isdigit():
+            continue
+        pk = int(s)
+        if pk <= 0 or pk in seen:
+            continue
+        seen.add(pk)
+        out.append(pk)
+    return out
+
+
+def _annotate_subtree_reply_counts(nodes):
+    """
+    為樹狀留言的每個 node 設定 subtree_reply_count：
+    從該則留言往下整串分支的「回覆總則數」（不含自己，含所有層級的子回覆）。
+    """
+
+    def count_under(node):
+        total = 0
+        for child in node.replies:
+            total += 1 + count_under(child)
+        node.subtree_reply_count = total
+        return total
+
+    for node in nodes:
+        count_under(node)
 
 
 def feed(request):
     search_query = (request.GET.get("q") or "").strip()
-    category_id = (request.GET.get("category") or "").strip()
-    tag_id = (request.GET.get("tag") or "").strip()
+    category_ids = _parse_positive_id_list(request.GET.getlist("category"))
+    tag_ids = _parse_positive_id_list(request.GET.getlist("tag"))
     page_number = (request.GET.get("page") or "").strip()
 
     if len(search_query) > 100:
@@ -44,34 +95,37 @@ def feed(request):
             post.save()
             form.instance = post
             form.save_m2m()
-
-            new_tags_raw = (form.cleaned_data.get("new_tags") or "").strip()
-            if new_tags_raw:
-                names = [p.strip() for p in re.split(r"[,\s]+", new_tags_raw) if p.strip()]
-                seen = set()
-                uniq = []
-                for name in names:
-                    key = name.lower()
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    uniq.append(name)
-                tag_objs = [Tag.objects.get_or_create(name=n)[0] for n in uniq]
-                post.tags.add(*tag_objs)
+            try:
+                analyze_post_health_task.delay(post.id)
+            except AttributeError:
+                # Celery 未啟用時，直接同步執行，避免功能失效
+                analyze_post_health_task(post.id)
             messages.success(request, "已發布貼文。")
             return redirect("posts:feed")
     else:
         form = PostEditForm()
 
     posts = (
-        Post.objects.select_related("author", "author__profile", "category")
+        Post.objects.select_related("author", "author__profile", "category", "latest_health_insight")
         .prefetch_related("likes", "post_comments", "tags")
-        .annotate(comment_count=Count("post_comments", distinct=True))
+        .annotate(
+            comment_count=Count("post_comments", distinct=True),
+            collection_count=Count("collections", distinct=True),
+        )
     )
+    if request.user.is_authenticated:
+        posts = posts.filter(
+            Q(visibility=Post.VISIBILITY_PUBLIC) | Q(author_id=request.user.id)
+        )
+    else:
+        posts = posts.filter(visibility=Post.VISIBILITY_PUBLIC)
     if search_query:
         posts = posts.filter(
-            Q(content__icontains=search_query) | Q(author__username__icontains=search_query)
-        )
+            Q(content__icontains=search_query)
+            | Q(title__icontains=search_query)
+            | Q(author__username__icontains=search_query)
+            | Q(tags__name__icontains=search_query)
+        ).distinct()
         if request.user.is_authenticated:
             last = (
                 SearchLog.objects.filter(user=request.user, keyword=search_query)
@@ -81,35 +135,55 @@ def feed(request):
             if last is None or last.created_at < timezone.now() - timedelta(seconds=30):
                 SearchLog.objects.create(user=request.user, keyword=search_query)
 
-    if category_id.isdigit():
-        posts = posts.filter(category_id=int(category_id))
-    if tag_id.isdigit():
-        posts = posts.filter(tags__id=int(tag_id)).distinct()
+    if category_ids:
+        valid_cats = list(Category.objects.filter(id__in=category_ids).values_list("id", flat=True))
+        if valid_cats:
+            posts = posts.filter(category_id__in=valid_cats)
+    if tag_ids:
+        valid_tags = list(Tag.objects.filter(id__in=tag_ids).values_list("id", flat=True))
+        if valid_tags:
+            posts = posts.filter(tags__id__in=valid_tags).distinct()
     # annotate / distinct 會讓預設 Meta.ordering 失效，須明確指定：最新貼文在上
     posts = posts.order_by("-created_at", "-id")
 
-    author_ids = set(posts.values_list("author_id", flat=True))
-    existing_profile_ids = set(Profile.objects.filter(user_id__in=author_ids).values_list("user_id", flat=True))
-    missing_profile_ids = author_ids - existing_profile_ids
-    if missing_profile_ids:
-        Profile.objects.bulk_create([Profile(user_id=user_id) for user_id in missing_profile_ids], ignore_conflicts=True)
-        posts = (
-            Post.objects.select_related("author", "author__profile", "category")
-            .prefetch_related("likes", "post_comments", "tags")
-            .annotate(comment_count=Count("post_comments", distinct=True))
+    if request.user.is_authenticated:
+        posts = posts.annotate(
+            user_has_liked=Exists(Like.objects.filter(post_id=OuterRef("pk"), user_id=request.user.id)),
+            user_has_collected=Exists(
+                Collection.objects.filter(post_id=OuterRef("pk"), user_id=request.user.id)
+            ),
         )
-        if search_query:
-            posts = posts.filter(
-                Q(content__icontains=search_query) | Q(author__username__icontains=search_query)
-            )
-        if category_id.isdigit():
-            posts = posts.filter(category_id=int(category_id))
-        if tag_id.isdigit():
-            posts = posts.filter(tags__id=int(tag_id)).distinct()
-        posts = posts.order_by("-created_at", "-id")
 
     paginator = Paginator(posts, 20)
     page_obj = paginator.get_page(page_number or 1)
+
+    liked_comment_ids = []
+    if request.user.is_authenticated:
+        comment_ids_on_page = []
+        for p in page_obj.object_list:
+            for c in p.post_comments.all():
+                comment_ids_on_page.append(c.id)
+        if comment_ids_on_page:
+            liked_comment_ids = list(
+                CommentLike.objects.filter(user=request.user, comment_id__in=comment_ids_on_page).values_list(
+                    "comment_id", flat=True
+                )
+            )
+
+    # 首頁留言改為樹狀顯示：為每篇貼文組出 root -> replies 結構
+    for p in page_obj.object_list:
+        comments = list(p.post_comments.all().order_by("created_at"))
+        by_id = {c.id: c for c in comments}
+        for c in by_id.values():
+            c.replies = []
+        roots = []
+        for c in comments:
+            if c.parent_id and c.parent_id in by_id:
+                by_id[c.parent_id].replies.append(c)
+            else:
+                roots.append(c)
+        _annotate_subtree_reply_counts(roots)
+        p.comment_roots = roots
 
     return render(
         request,
@@ -123,24 +197,60 @@ def feed(request):
             "results_count": paginator.count,
             "categories": Category.objects.all(),
             "tags": Tag.objects.all(),
-            "selected_category": category_id,
-            "selected_tag": tag_id,
+            "selected_category_ids": category_ids,
+            "selected_tag_ids": tag_ids,
+            "liked_comment_ids": liked_comment_ids,
         },
     )
 
 
 @login_required(login_url=settings.LOGIN_URL)
 def like_toggle(request, pk):
+    """
+    貼文按讚 / 取消按讚。
+    - 一般表單送出：處理完後導向上一頁或動態牆（會帶 Django message）。
+    - AJAX（fetch + Accept: application/json）：只回 JSON，不重新整理頁面。
+    """
+    # 依照網址上的主鍵找出貼文；找不到就回 404
     post = get_object_or_404(Post, pk=pk)
+
+    # 這個 view 只接受 POST（按鈕送出）；GET 就送回動態牆，避免誤觸網址改到資料
     if request.method != "POST":
         return redirect("posts:feed")
+
+    wants_json = _wants_json(request)
+
+    # 查目前使用者是否已經對這篇貼文按過讚（Like 是中介資料表）
     like = post.likes.filter(user=request.user).first()
+    # liked 表示「這次操作完成後，使用者是否處於已按讚狀態」
+    liked = False
+
     if like:
+        # 已按讚 → 刪除那筆 Like，變成未按讚
         like.delete()
-        messages.info(request, "已取消按讚。")
+        liked = False
+        if not wants_json:
+            messages.info(request, "已取消按讚。")
     else:
+        # 未按讚 → 建立 Like（get_or_create 避免重複鍵錯誤）
         Like.objects.get_or_create(user=request.user, post=post)
-        messages.success(request, "已按讚。")
+        liked = True
+        if not wants_json:
+            messages.success(request, "已按讚。")
+
+    # like_count 存在 Post 上，由 signal 維護；這裡從資料庫再讀一次確保數字最新
+    post.refresh_from_db(fields=["like_count"])
+
+    if wants_json:
+        # 非同步模式：只回兩個欄位，給前端 Alpine / fetch 更新畫面用
+        return JsonResponse(
+            {
+                "is_liked": liked,  # 現在是否為「已按讚」
+                "like_count": post.like_count,  # 目前的讚數（整數）
+            }
+        )
+
+    # 一般表單模式：導回表單裡 hidden「next」指定的安全網址，否則回動態牆
     next_url = (request.POST.get("next") or "").strip()
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
@@ -152,13 +262,29 @@ def collect_toggle(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method != "POST":
         return redirect("posts:feed")
+
+    wants_json = _wants_json(request)
     collection = post.collections.filter(user=request.user).first()
+    collected = False
     if collection:
         collection.delete()
-        messages.info(request, "已取消收藏。")
+        collected = False
+        if not wants_json:
+            messages.info(request, "已取消收藏。")
     else:
         Collection.objects.get_or_create(user=request.user, post=post)
-        messages.success(request, "已收藏貼文。")
+        collected = True
+        if not wants_json:
+            messages.success(request, "已收藏貼文。")
+
+    if wants_json:
+        return JsonResponse(
+            {
+                "is_collected": collected,
+                "collection_count": post.collections.count(),
+            }
+        )
+
     next_url = (request.POST.get("next") or "").strip()
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
@@ -166,10 +292,45 @@ def collect_toggle(request, pk):
 
 
 @login_required(login_url=settings.LOGIN_URL)
+def comment_like_toggle(request, pk, comment_pk):
+    post = get_object_or_404(Post, pk=pk)
+    comment = get_object_or_404(PostComment, pk=comment_pk, post_id=post.id)
+    if request.method != "POST":
+        return redirect("posts:post_detail", pk=pk)
+
+    wants_json = _wants_json(request)
+    existing = CommentLike.objects.filter(user=request.user, comment=comment).first()
+    if existing:
+        existing.delete()
+        liked = False
+        if not wants_json:
+            messages.info(request, "已取消留言按讚。")
+    else:
+        CommentLike.objects.get_or_create(user=request.user, comment=comment)
+        liked = True
+        if not wants_json:
+            messages.success(request, "已對留言按讚。")
+    comment.refresh_from_db(fields=["like_count"])
+
+    if wants_json:
+        return JsonResponse({"is_liked": liked, "like_count": comment.like_count})
+
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect("posts:post_detail", pk=pk)
+
+
+@login_required(login_url=settings.LOGIN_URL)
 def comment_create(request, pk):
     post = get_object_or_404(Post, pk=pk)
+    wants_json = _wants_json(request)
+
     if request.method != "POST":
+        if wants_json:
+            return JsonResponse({"ok": False, "error": "不支援的請求方式。"}, status=405)
         return redirect("posts:feed")
+
     content = (request.POST.get("content") or "").strip()
     parent_id_raw = (request.POST.get("parent_id") or "").strip()
 
@@ -180,35 +341,120 @@ def comment_create(request, pk):
     if parent_id_raw.isdigit():
         parent = get_object_or_404(PostComment, pk=int(parent_id_raw), post_id=post.id)
         if parent.is_locked:
-            parent = None
-            messages.error(request, "此留言已鎖定，無法回覆。")
+            msg = "此留言已鎖定，無法回覆。"
+            if wants_json:
+                return JsonResponse({"ok": False, "error": msg}, status=400)
+            messages.error(request, msg)
+            next_url = (request.POST.get("next") or "").strip()
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
+            return redirect("posts:feed")
 
-    if content:
-        comment = PostComment.objects.create(
-            post=post,
-            author=request.user,
-            content=content,
-            parent=parent,
-        )
-        if parent:
-            comment.root_id = parent.root_id or parent.id
-        else:
-            comment.root_id = comment.id
-        comment.save(update_fields=["root"])
-        messages.success(request, "留言已送出。")
-    else:
+    if not content:
+        if wants_json:
+            return JsonResponse({"ok": False, "error": "留言內容不可為空。"}, status=400)
         messages.error(request, "留言內容不可為空。")
+        next_url = (request.POST.get("next") or "").strip()
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            return redirect(next_url)
+        return redirect("posts:feed")
+
+    comment = PostComment.objects.create(
+        post=post,
+        author=request.user,
+        content=content,
+        parent=parent,
+    )
+    if parent:
+        comment.root_id = parent.root_id or parent.id
+    else:
+        comment.root_id = comment.id
+    comment.save(update_fields=["root"])
+
+    if wants_json:
+        comment = PostComment.objects.select_related("author", "author__profile").get(pk=comment.pk)
+        comment.replies = []
+        _annotate_subtree_reply_counts([comment])
+        liked_comment_ids = list(
+            CommentLike.objects.filter(user=request.user, comment__post_id=post.id).values_list(
+                "comment_id", flat=True
+            )
+        )
+        html = render_to_string(
+            "posts/_comment_node.html",
+            {"node": comment, "post": post, "liked_comment_ids": liked_comment_ids},
+            request=request,
+        )
+        comment_count = PostComment.objects.filter(post_id=post.id).count()
+        return JsonResponse(
+            {
+                "ok": True,
+                "html": html,
+                "comment_count": comment_count,
+                "parent_id": parent.id if parent else None,
+            }
+        )
+
+    messages.success(request, "留言已送出。")
     next_url = (request.POST.get("next") or "").strip()
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         return redirect(next_url)
     return redirect("posts:feed")
 
 
+@login_required(login_url=settings.LOGIN_URL)
+def comment_edit(request, pk, comment_pk):
+    post = get_object_or_404(Post, pk=pk)
+    comment = get_object_or_404(PostComment, pk=comment_pk, post_id=post.id)
+    if comment.author_id != request.user.id:
+        messages.error(request, "只能編輯自己的留言。")
+        return redirect("posts:post_detail", pk=post.id)
+    if request.method != "POST":
+        return redirect("posts:post_detail", pk=post.id)
+
+    content = (request.POST.get("content") or "").strip()
+    if len(content) > 2000:
+        content = content[:2000]
+    if not content:
+        messages.error(request, "留言內容不可為空。")
+    else:
+        comment.content = content
+        comment.save(update_fields=["content", "updated_at"])
+        messages.success(request, "留言已更新。")
+
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect("posts:post_detail", pk=post.id)
+
+
+@login_required(login_url=settings.LOGIN_URL)
+def comment_delete(request, pk, comment_pk):
+    post = get_object_or_404(Post, pk=pk)
+    comment = get_object_or_404(PostComment, pk=comment_pk, post_id=post.id)
+    if comment.author_id != request.user.id:
+        messages.error(request, "只能刪除自己的留言。")
+        return redirect("posts:post_detail", pk=post.id)
+    if request.method == "POST":
+        comment.delete()
+        messages.success(request, "留言已刪除。")
+
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect("posts:post_detail", pk=post.id)
+
+
 def post_detail(request, pk):
     post = get_object_or_404(
-        Post.objects.select_related("author", "author__profile", "category").prefetch_related("tags", "post_comments", "likes"),
+        Post.objects.select_related("author", "author__profile", "category", "latest_health_insight")
+        .prefetch_related("tags", "post_comments", "likes")
+        .annotate(collection_count=Count("collections", distinct=True)),
         pk=pk,
     )
+    if post.visibility == Post.VISIBILITY_PRIVATE and post.author_id != getattr(request.user, "id", None):
+        messages.error(request, "此貼文僅作者可查看。")
+        return redirect("posts:feed")
     is_liked = False
     is_collected = False
     if request.user.is_authenticated:
@@ -229,10 +475,26 @@ def post_detail(request, pk):
         else:
             roots.append(c)
 
+    _annotate_subtree_reply_counts(roots)
+
+    liked_comment_ids = []
+    if request.user.is_authenticated:
+        liked_comment_ids = list(
+            CommentLike.objects.filter(user=request.user, comment__post_id=post.id).values_list(
+                "comment_id", flat=True
+            )
+        )
+
     return render(
         request,
         "posts/post_detail.html",
-        {"post": post, "is_liked": is_liked, "is_collected": is_collected, "comment_roots": roots},
+        {
+            "post": post,
+            "is_liked": is_liked,
+            "is_collected": is_collected,
+            "comment_roots": roots,
+            "liked_comment_ids": liked_comment_ids,
+        },
     )
 
 
@@ -329,6 +591,7 @@ def tag_delete(request, pk):
 def collections_list(request):
     collections = (
         Collection.objects.filter(user=request.user)
+        .filter(Q(post__visibility=Post.VISIBILITY_PUBLIC) | Q(post__author_id=request.user.id))
         .select_related("post", "post__author", "post__author__profile", "post__category")
         .prefetch_related("post__tags")
         .order_by("-created_at")
@@ -347,27 +610,3 @@ def collections_list(request):
         },
     )
 
-
-@require_POST
-def ai_chat(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "請先登入後再使用 AI 小幫手。"}, status=401)
-    message = (request.POST.get("message") or "").strip()[:4000]
-    image = request.FILES.get("image")
-    history_raw = request.POST.get("history") or "[]"
-    try:
-        history = json.loads(history_raw)
-    except json.JSONDecodeError:
-        history = []
-
-    if image and image.size > 5 * 1024 * 1024:
-        return JsonResponse({"error": "圖片請小於 5MB。"}, status=400)
-    if image:
-        ct = (getattr(image, "content_type", "") or "").lower()
-        if ct and ct not in ("image/jpeg", "image/png", "image/gif", "image/webp"):
-            return JsonResponse({"error": "請上傳 JPG、PNG、GIF 或 WebP 圖片。"}, status=400)
-    if not message and not image:
-        return JsonResponse({"error": "請輸入文字或上傳圖片。"}, status=400)
-
-    reply = get_assistant_reply(message=message, image=image, history=history)
-    return JsonResponse({"reply": reply})

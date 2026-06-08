@@ -1,10 +1,27 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}首頁 - 等等吃啥{% endblock %}
 
 {% block extra_head %}
 {% if user.is_authenticated %}{{ form.media }}{% endif %}
+<link rel="stylesheet" href="{% static 'css/health_mode_ui.css' %}?v=20260421b">
 <style>
+  /* 按下「回到最上方」時暫時啟用，讓捲動結束貼齊頂部區塊（配合 sticky 導覽列） */
+  html.feed-back-to-top-snap {
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 4.5rem;
+  }
+  @media (min-width: 640px) {
+    html.feed-back-to-top-snap {
+      scroll-padding-top: 5rem;
+    }
+  }
+  #feed-top-snap {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+  }
+
   /* Make the compose editor shorter on the feed page only */
   .post-compose .cke_contents {
     height: 180px !important;
@@ -21,39 +38,157 @@
   .post-compose-details[open] .compose-chevron {
     transform: rotate(180deg);
   }
+
+  .health-mode-toggle {
+    --track-off: #eef2f7;
+    --mint: #8ee8ca;
+    --lavender: #c9bcff;
+    --peach: #ffcfae;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 220ms cubic-bezier(.22,.9,.33,1);
+  }
+  .health-mode-toggle:hover {
+    transform: scale(1.03);
+  }
+  .health-mode-track {
+    width: 56px;
+    height: 32px;
+    border-radius: 999px;
+    position: relative;
+    background: var(--track-off);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 6px 16px rgba(15,23,42,.1);
+    transition: all 260ms cubic-bezier(.22,.9,.33,1);
+  }
+  .health-mode-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 5px 12px rgba(15,23,42,.18);
+    transition: all 260ms cubic-bezier(.22,.9,.33,1);
+  }
+  .health-mode-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(51 65 85);
+  }
+  .health-mode-enabled .health-mode-track {
+    background: linear-gradient(135deg, var(--mint), var(--lavender), var(--peach));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 10px 20px rgba(142,232,202,.35);
+  }
+  .health-mode-enabled .health-mode-thumb {
+    left: 27px;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="mx-auto w-full max-w-3xl">
-  <div class="mb-4 rounded-xl bg-white p-4 shadow sm:p-5">
-    <form action="{% url 'posts:feed' %}" method="get" class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+  {% if not user.is_authenticated %}
+  <section class="saas-card mb-4 overflow-hidden p-6 sm:p-8">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-brand-teal-soft">美食社群</p>
+        <h1 class="mt-1 text-2xl font-bold text-brand-teal sm:text-3xl">發現下一餐吃什麼</h1>
+        <p class="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+          登入後即可瀏覽美食動態、發文、使用 AI 助理與健康達人分析。
+        </p>
+      </div>
+      <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+        <a href="{% url 'accounts:register' %}" class="saas-btn-primary text-center">免費註冊</a>
+        <a href="{% url 'accounts:login' %}" class="saas-btn-ghost text-center">登入</a>
+      </div>
+    </div>
+  </section>
+  {% else %}
+  <div id="feed-top-snap" class="saas-card mb-4 p-4 sm:p-5">
+    <div class="mb-3 flex items-center justify-between gap-3">
+      <p class="saas-section-title">探索美食動態</p>
+      <button id="health-mode-toggle" type="button" class="health-mode-toggle" aria-pressed="false">
+        <span class="health-mode-track"><span class="health-mode-thumb"></span></span>
+        <span class="health-mode-label">健康達人</span>
+      </button>
+    </div>
+    <form id="feed-search-form" action="{% url 'posts:feed' %}" method="get" data-show-loading-on-submit class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
       <input
         type="text"
         name="q"
         value="{{ search_query|default:'' }}"
-        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm"
+        class="saas-input min-h-11 w-full border px-3 py-2 text-base sm:text-sm"
         placeholder="搜尋貼文內容或發文者"
       >
       <div class="flex gap-2">
-        <button type="submit" class="min-h-11 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">搜尋</button>
-        <a href="{% url 'posts:feed' %}" class="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">清除</a>
+        <button type="submit" class="saas-btn-primary">搜尋</button>
+        <a href="{% url 'posts:feed' %}" class="saas-btn-ghost">清除</a>
       </div>
 
-      <div class="grid gap-2 sm:col-span-2 sm:grid-cols-2">
-        <select name="category" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm">
-          <option value="">全部分類</option>
-          {% for c in categories %}
-            <option value="{{ c.id }}" {% if selected_category|default:'' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
-          {% endfor %}
-        </select>
-        <select name="tag" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm">
-          <option value="">全部標籤</option>
-          {% for t in tags %}
-            <option value="{{ t.id }}" {% if selected_tag|default:'' == t.id|stringformat:'s' %}selected{% endif %}>#{{ t.name }}</option>
-          {% endfor %}
-        </select>
+      <div id="feed-selected-categories-box" class="sm:col-span-2 {% if not selected_category_ids %}hidden{% endif %}">
+        <div class="mt-1 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
+          <p class="text-xs font-medium text-emerald-700">搜尋中分類</p>
+          <div id="feed-selected-categories-list" class="mt-1 flex flex-wrap gap-1.5">
+            {% for c in categories %}
+              {% if c.id in selected_category_ids %}
+                <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">{{ c.name }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
       </div>
+
+      <div id="feed-selected-tags-box" class="sm:col-span-2 {% if not selected_tag_ids %}hidden{% endif %}">
+        <div class="mt-1 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
+          <p class="text-xs font-medium text-sky-700">搜尋中標籤</p>
+          <div id="feed-selected-tags-list" class="mt-1 flex flex-wrap gap-1.5">
+            {% for t in tags %}
+              {% if t.id in selected_tag_ids %}
+                <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200">#{{ t.name }}</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+        <div>
+          <label for="feed-category" class="mb-1 block text-sm font-medium text-slate-600">分類</label>
+          <select
+            id="feed-category"
+            name="category"
+            multiple
+            size="5"
+            class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 outline-none ring-sky-200 focus:ring"
+            aria-describedby="feed-filter-hint"
+          >
+            {% for c in categories %}
+              <option value="{{ c.id }}" {% if c.id in selected_category_ids %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="feed-tag" class="mb-1 block text-sm font-medium text-slate-600">標籤</label>
+          <select
+            id="feed-tag"
+            name="tag"
+            multiple
+            size="5"
+            class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 outline-none ring-sky-200 focus:ring"
+            aria-describedby="feed-filter-hint"
+          >
+            {% for t in tags %}
+              <option value="{{ t.id }}" {% if t.id in selected_tag_ids %}selected{% endif %}>#{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <p id="feed-filter-hint" class="text-xs text-slate-500 sm:col-span-2">可複選：按住 Ctrl再點選多項；不選表示不限。</p>
     </form>
 
     {% if search_query %}
@@ -61,11 +196,11 @@
     {% endif %}
   </div>
 
-  {% if user.is_authenticated and not search_query %}
-    <details class="post-compose-details mb-4 overflow-hidden rounded-xl bg-white shadow" {% if form.errors %}open{% endif %}>
-      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-slate-50 sm:px-5">
+  {% if not search_query %}
+    <details class="post-compose-details saas-card mb-4 overflow-hidden" {% if form.errors %}open{% endif %}>
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-brand-muted sm:px-5">
         <div class="flex min-w-0 items-center gap-3">
-          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-teal/10 text-brand-teal">
             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
           </span>
           <div class="min-w-0 text-left">
@@ -88,11 +223,16 @@
             {{ form.title }}
             {% if form.title.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.title.errors.0 }}</p>{% endif %}
           </div>
-          <div class="mb-3 grid gap-3 sm:grid-cols-2">
+          <div class="mb-3 grid gap-3 sm:grid-cols-3">
             <div>
               <label for="{{ form.category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">分類</label>
               {{ form.category }}
               {% if form.category.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.category.errors.0 }}</p>{% endif %}
+            </div>
+            <div>
+              <label for="{{ form.visibility.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">誰可以看到</label>
+              {{ form.visibility }}
+              {% if form.visibility.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.visibility.errors.0 }}</p>{% endif %}
             </div>
             <div>
               <label for="{{ form.new_category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">新增分類</label>
@@ -100,12 +240,12 @@
               {% if form.new_category.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.new_category.errors.0 }}</p>{% endif %}
             </div>
           </div>
-          <div class="mb-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <label for="{{ form.tags.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">標籤</label>
+          <div class="mb-3 space-y-3">
+            <fieldset class="min-w-0 border-0 p-0">
+              <legend class="mb-2 text-sm font-medium text-slate-600">標籤（多選）</legend>
               {{ form.tags }}
-              {% if form.tags.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.tags.errors.0 }}</p>{% endif %}
-            </div>
+            </fieldset>
+            {% if form.tags.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.tags.errors.0 }}</p>{% endif %}
             <div>
               <label for="{{ form.new_tags.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">新增標籤</label>
               {{ form.new_tags }}
@@ -121,11 +261,11 @@
             {% if form.content.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.content.errors.0 }}</p>{% endif %}
           </div>
           <div class="mb-4">
-            <label for="{{ form.image.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">圖片（可選）</label>
-            {{ form.image }}
-            {% if form.image.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.image.errors.0 }}</p>{% endif %}
+            <label for="{{ form.gallery.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">貼文附圖（可選，最多 3 張）</label>
+            {{ form.gallery }}
+            {% if form.gallery.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.gallery.errors.0 }}</p>{% endif %}
           </div>
-          <button type="submit" class="min-h-11 w-full rounded-lg bg-sky-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-sky-600 sm:w-auto">發布</button>
+          <button type="submit" class="saas-btn-primary w-full sm:w-auto">發布</button>
         </form>
       </div>
     </details>
@@ -133,7 +273,7 @@
 
   <div class="space-y-3 sm:space-y-4">
     {% for post in posts %}
-      <article class="rounded-xl bg-white p-4 shadow sm:p-5">
+      <article class="saas-card relative overflow-hidden p-4 sm:p-5" data-post-article data-post-id="{{ post.id }}" data-scroll-reveal>
         <div class="mb-2 flex items-start gap-3">
           <a href="{% url 'accounts:profile_detail' post.author.username %}" class="shrink-0">
             {% if post.author.profile.avatar %}
@@ -150,18 +290,24 @@
               <a href="{% url 'accounts:profile_detail' post.author.username %}" class="truncate font-semibold text-slate-800 hover:underline">{{ post.author.username }}</a>
               <span class="text-sm text-slate-500">{{ post.created_at|timesince }} 前</span>
               {% if post.category %}<span class="text-sm text-slate-500">· {{ post.category.name }}</span>{% endif %}
+              {% if post.visibility == "private" %}
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">僅自己可見</span>
+              {% endif %}
             </div>
             {% if post.tags.all %}
               <div class="mt-1 flex flex-wrap gap-2">
                 {% for tag in post.tags.all %}
-                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">#{{ tag.name }}</span>
+                  <a
+                    href="{% url 'posts:feed' %}?tag={{ tag.id }}"
+                    class="saas-pill"
+                  >#{{ tag.name }}</a>
                 {% endfor %}
               </div>
             {% endif %}
           </div>
 
           <div class="shrink-0 flex items-center gap-2">
-            <a href="{% url 'posts:post_detail' post.pk %}" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            <a href="{% url 'posts:post_detail' post.pk %}" class="saas-btn-ghost px-3 py-2 text-xs sm:text-sm">查看</a>
             {% if user.is_authenticated and user == post.author %}
               <a href="{% url 'posts:post_edit' post.pk %}" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">編輯</a>
               <a href="{% url 'posts:post_delete' post.pk %}" class="rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 sm:text-sm">刪除</a>
@@ -173,44 +319,161 @@
           <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">{{ post.title }}</h2>
         {% endif %}
 
-        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:my-2 [&_img]:max-h-[min(400px,60vh)] [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
           {{ post.content|safe }}
         </div>
 
-        {% if post.image %}
-          <img src="{{ post.image.url }}" alt="" class="mb-2 w-full max-h-[min(400px,60vh)] rounded-lg object-cover">
+        {% if post.gallery_images %}
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel {% if post.gallery_images|length <= 1 %}is-single{% endif %}" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                {% for img in post.gallery_images %}
+                  <div class="apple-carousel-slide">
+                    <img src="{{ img.url }}" alt="" class="post-cover-image">
+                  </div>
+                {% endfor %}
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                {% for img in post.gallery_images %}
+                  <button
+                    type="button"
+                    class="apple-carousel-dot {% if forloop.first %}is-active{% endif %}"
+                    data-carousel-dot
+                    data-index="{{ forloop.counter0 }}"
+                    aria-label="切換到第 {{ forloop.counter }} 張"
+                  ></button>
+                {% endfor %}
+              </div>
+            </div>
+            {% if user.is_authenticated %}
+            {% include "posts/_health_badge.html" with insight=post.latest_health_insight inline=False %}
+            {% endif %}
+          </div>
+        {% elif user.is_authenticated and post.latest_health_insight and post.latest_health_insight.status == "completed" %}
+          {% include "posts/_health_badge.html" with insight=post.latest_health_insight inline=True %}
         {% endif %}
 
-        <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-          <span>{{ post.like_count }} 讚</span>
-          <span>{{ post.comment_count|default:0 }} 留言</span>
-        </div>
+        {% if user.is_authenticated %}
+          {# Alpine：包一層，讓「讚數、按鈕文字、小提示」共用同一組狀態 #}
+          <div
+            class="space-y-2"
+            x-data="postInteractBlock({{ post.user_has_liked|yesno:'true,false' }}, {{ post.like_count }}, {{ post.user_has_collected|yesno:'true,false' }}, {{ post.collection_count|default:0 }})"
+          >
+            <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              {# x-text：讚數由 Alpine 的 count 更新，按讚後不用整頁重新整理 #}
+              <span class="inline-flex items-center gap-1">
+                <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                <span x-text="count + ' 讚'"></span>
+              </span>
+              <span data-post-comment-count class="inline-flex items-center gap-1">
+                <i class="fa-solid fa-message" aria-hidden="true"></i>
+                <span data-post-comment-count-value>{{ post.comment_count|default:0 }} 留言</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                <span x-text="collectionCount + ' 收藏'"></span>
+              </span>
+            </div>
+
+            {# 小提示：成功或失敗時顯示，2 秒後自動隱藏（由 submitLike 裡的 setTimeout 控制） #}
+            <p x-show="showMsg" x-cloak class="text-xs text-slate-500" x-text="msgText"></p>
+
+            <div class="mt-1 flex flex-col gap-2 sm:flex-row sm:gap-3">
+              {# @submit.prevent：攔截表單預設送出，改交給 submitLike 用 fetch 非同步送 #}
+              <form
+                method="post"
+                action="{% url 'posts:like_toggle' post.pk %}"
+                class="w-full sm:w-auto"
+                @submit.prevent="submitLike"
+              >
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button
+                  type="submit"
+                  class="inline-flex min-h-11 gap-1 items-center justify-center rounded-lg border border-rose-300 px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 sm:w-auto"
+                  :disabled="submittingLike"
+                >
+                  <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                  <span x-text="isLiked ? '取消按讚' : '按讚'"></span>
+                </button>
+              </form>
+              <form
+                method="post"
+                action="{% url 'posts:collect_toggle' post.pk %}"
+                class="w-full sm:w-auto"
+                @submit.prevent="submitCollect"
+              >
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button
+                  type="submit"
+                  class="inline-flex min-h-11 gap-1 items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
+                  :disabled="submittingCollect"
+                >
+                  <i x-show="!isCollected" class="fa-regular fa-bookmark" aria-hidden="true"></i>
+                  <i x-show="isCollected" x-cloak class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                  <span x-text="isCollected ? '取消收藏' : '收藏'"></span>
+                </button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>{{ post.like_count }} 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>{{ post.comment_count|default:0 }} 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>{{ post.collection_count|default:0 }} 收藏</span>
+            </span>
+          </div>
+        {% endif %}
 
         {% if user.is_authenticated %}
-          <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:gap-3">
-            <form method="post" action="{% url 'posts:like_toggle' post.pk %}" class="w-full sm:w-auto">
-              {% csrf_token %}
-              <input type="hidden" name="next" value="{{ request.get_full_path }}">
-              <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-rose-300 px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 sm:w-auto">按讚 / 取消按讚</button>
-            </form>
-            <form method="post" action="{% url 'posts:collect_toggle' post.pk %}" class="w-full sm:w-auto">
-              {% csrf_token %}
-              <input type="hidden" name="next" value="{{ request.get_full_path }}">
-              <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto">收藏 / 取消收藏</button>
-            </form>
-          </div>
-
           <hr class="my-4 border-slate-200">
 
-          <div class="space-y-2">
-            {% for comment in post.post_comments.all %}
-              <p class="break-words text-sm"><strong>{{ comment.author.username }}</strong> {{ comment.content }}</p>
-            {% empty %}
-              <p class="text-sm text-slate-400">尚無留言</p>
-            {% endfor %}
+          <div x-data="{ showComments: {% if post.comment_count|default:0 > 3 %}false{% else %}true{% endif %} }">
+            {% if post.comment_count|default:0 > 3 %}
+              <button
+                type="button"
+                class="mb-2 text-sm font-medium text-sky-600 hover:underline"
+                @click="showComments = !showComments"
+                x-text="showComments ? '收起留言' : '查看全部 {{ post.comment_count|default:0 }} 則留言'"
+              ></button>
+            {% endif %}
+
+            <div
+              class="space-y-2"
+              data-post-comments-list
+              x-show="showComments"
+              x-cloak
+              x-transition:enter="transition ease-out duration-200"
+              x-transition:enter-start="opacity-0 -translate-y-0.5"
+              x-transition:enter-end="opacity-100 translate-y-0"
+              x-transition:leave="transition ease-in duration-150"
+              x-transition:leave-start="opacity-100 translate-y-0"
+              x-transition:leave-end="opacity-0 -translate-y-0.5"
+            >
+              {% for node in post.comment_roots %}
+                {% include "posts/_comment_node.html" with node=node %}
+              {% empty %}
+                <p class="text-sm text-slate-400" data-comments-empty-placeholder>尚無留言</p>
+              {% endfor %}
+            </div>
           </div>
 
-          <form action="{% url 'posts:comment_create' post.pk %}" method="post" class="mt-3">
+          <form action="{% url 'posts:comment_create' post.pk %}" method="post" class="js-comment-create-form mt-3">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -222,7 +485,7 @@
       </article>
     {% empty %}
       <div class="rounded-xl bg-white px-6 py-10 text-center text-slate-500 shadow sm:px-10 sm:py-12">
-        <p class="text-sm sm:text-base">尚無貼文，{% if user.is_authenticated %}來發第一篇吧！{% else %}登入後即可發文與互動。{% endif %}</p>
+        <p class="text-sm sm:text-base">尚無貼文，來發第一篇吧！</p>
       </div>
     {% endfor %}
   </div>
@@ -240,5 +503,177 @@
       </div>
     </nav>
   {% endif %}
+
+<button
+  id="feed-new-posts-btn"
+  type="button"
+  class="saas-btn-morandi fixed bottom-5 left-1/2 z-40 hidden -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold ring-2 ring-white/70 transition sm:bottom-7"
+>
+  回到最上方
+</button>
+  {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/apple_carousel.js' %}?v=20260421b"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const newPostsBtn = document.getElementById("feed-new-posts-btn");
+    const firstArticle = document.querySelector("[data-post-article][data-post-id]");
+    const firstPostId = firstArticle ? Number(firstArticle.getAttribute("data-post-id") || 0) : 0;
+    const currentUrl = new URL(window.location.href);
+    const currentPage = currentUrl.searchParams.get("page");
+    const onFirstPage = !currentPage || currentPage === "1";
+    let hasNewPosts = false;
+
+    function syncNewPostsBtn() {
+      if (!newPostsBtn) return;
+      const show = window.scrollY > 180;
+      newPostsBtn.classList.toggle("hidden", !show);
+      newPostsBtn.classList.toggle("animate-bounce", hasNewPosts);
+      newPostsBtn.textContent = hasNewPosts ? "有新貼文，回到上方查看" : "回到最上方";
+    }
+
+    async function checkNewPosts() {
+      if (!onFirstPage || !firstPostId) return;
+      try {
+        const checkUrl = new URL(window.location.href);
+        checkUrl.searchParams.set("page", "1");
+        checkUrl.searchParams.set("_poll", String(Date.now()));
+        const response = await fetch(checkUrl.toString(), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const incomingFirst = doc.querySelector("[data-post-article][data-post-id]");
+        if (!incomingFirst) return;
+        const incomingId = Number(incomingFirst.getAttribute("data-post-id") || 0);
+        if (incomingId > firstPostId) {
+          hasNewPosts = true;
+          syncNewPostsBtn();
+        }
+      } catch (_e) {
+        // ignore polling errors
+      }
+    }
+
+    if (newPostsBtn) {
+      function endFeedBackToTopSnap() {
+        document.documentElement.classList.remove("feed-back-to-top-snap");
+      }
+
+      newPostsBtn.addEventListener("click", () => {
+        document.documentElement.classList.add("feed-back-to-top-snap");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if ("onscrollend" in window) {
+          window.addEventListener(
+            "scrollend",
+            () => {
+              endFeedBackToTopSnap();
+            },
+            { once: true }
+          );
+        } else {
+          window.setTimeout(endFeedBackToTopSnap, 700);
+        }
+        if (hasNewPosts) {
+          window.setTimeout(() => {
+            window.location.reload();
+          }, 450);
+        }
+      });
+      window.addEventListener("scroll", syncNewPostsBtn, { passive: true });
+      syncNewPostsBtn();
+    }
+
+    if (onFirstPage && firstPostId) {
+      window.setInterval(checkNewPosts, 30000);
+    }
+
+    const categorySelect = document.getElementById("feed-category");
+    const selectedCategoriesBox = document.getElementById("feed-selected-categories-box");
+    const selectedCategoriesList = document.getElementById("feed-selected-categories-list");
+    const tagSelect = document.getElementById("feed-tag");
+    const selectedTagsBox = document.getElementById("feed-selected-tags-box");
+    const selectedTagsList = document.getElementById("feed-selected-tags-list");
+    if (
+      categorySelect &&
+      selectedCategoriesBox &&
+      selectedCategoriesList &&
+      tagSelect &&
+      selectedTagsBox &&
+      selectedTagsList
+    ) {
+      function renderSelectedChips(selectEl, boxEl, listEl, chipClass) {
+        const selectedOptions = Array.from(selectEl.selectedOptions || []);
+        listEl.innerHTML = "";
+        if (!selectedOptions.length) {
+          boxEl.classList.add("hidden");
+          return;
+        }
+        boxEl.classList.remove("hidden");
+        selectedOptions.forEach((opt) => {
+          const chip = document.createElement("span");
+          chip.className = chipClass;
+          chip.textContent = opt.textContent.trim();
+          listEl.appendChild(chip);
+        });
+      }
+
+      function renderSelectedFiltersNow() {
+        renderSelectedChips(
+          categorySelect,
+          selectedCategoriesBox,
+          selectedCategoriesList,
+          "rounded-full bg-white px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
+        );
+        renderSelectedChips(
+          tagSelect,
+          selectedTagsBox,
+          selectedTagsList,
+          "rounded-full bg-white px-2.5 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
+        );
+      }
+
+      categorySelect.addEventListener("change", renderSelectedFiltersNow);
+      categorySelect.addEventListener("click", renderSelectedFiltersNow);
+      categorySelect.addEventListener("keyup", renderSelectedFiltersNow);
+      tagSelect.addEventListener("change", renderSelectedFiltersNow);
+      tagSelect.addEventListener("click", renderSelectedFiltersNow);
+      tagSelect.addEventListener("keyup", renderSelectedFiltersNow);
+      renderSelectedFiltersNow();
+    }
+
+    const healthModeToggle = document.getElementById("health-mode-toggle");
+    const healthCards = document.querySelectorAll("[data-post-article]");
+    const storageKey = "feed-health-mode-enabled";
+    let isHealthMode = window.localStorage.getItem(storageKey) === "1";
+
+    function paintHealthMode() {
+      if (!healthModeToggle) return;
+      healthModeToggle.classList.toggle("health-mode-enabled", isHealthMode);
+      healthModeToggle.setAttribute("aria-pressed", isHealthMode ? "true" : "false");
+      healthCards.forEach((card) => {
+        card.classList.toggle("health-mode-on", isHealthMode);
+      });
+    }
+
+    if (healthModeToggle) {
+      healthModeToggle.addEventListener("click", () => {
+        isHealthMode = !isHealthMode;
+        window.localStorage.setItem(storageKey, isHealthMode ? "1" : "0");
+        paintHealthMode();
+      });
+      paintHealthMode();
+    }
+
+    if (window.initAppleCarousels) {
+      window.initAppleCarousels();
+      window.addEventListener("load", window.initAppleCarousels);
+    }
+  });
+</script>
 {% endblock %}

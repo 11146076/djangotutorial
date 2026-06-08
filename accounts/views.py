@@ -6,13 +6,14 @@ from django.contrib.auth.views import (
 )
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ProfileEditForm, RegisterForm, UsernameOrEmailAuthenticationForm
 from .models import Profile
 
-from posts.models import Post
-from posts.models import Follow
+from posts.models import Follow, Post, PostComment
 
 User = get_user_model()
 
@@ -23,7 +24,7 @@ class LoginView(DjangoLoginView):
 
 
 class LogoutView(DjangoLogoutView):
-    next_page = "posts:feed"
+    next_page = "accounts:login"
 
 
 def register(request):
@@ -55,22 +56,79 @@ def profile_edit(request):
     return render(request, "accounts/profile_edit.html", {"form": form})
 
 
-def profile_detail(request, username):
+PROFILE_POSTS_PER_PAGE = 10
+PROFILE_COMMENTS_PER_PAGE = 10
+
+
+def _profile_header_context(request, username):
     user = get_object_or_404(User, username=username)
     profile, _ = Profile.objects.get_or_create(user=user)
-    posts = Post.objects.filter(author=user).order_by("-created_at")[:20]
     is_following = False
     if request.user.is_authenticated:
         is_following = Follow.objects.filter(follower=request.user, following=user).exists()
+    follower_count = Follow.objects.filter(following=user).count()
+    following_count = Follow.objects.filter(follower=user).count()
+    return {
+        "profile_user": user,
+        "profile": profile,
+        "is_following": is_following,
+        "follower_count": follower_count,
+        "following_count": following_count,
+    }
+
+
+def profile_detail(request, username):
+    return redirect("accounts:profile_posts", username=username)
+
+
+def profile_posts(request, username):
+    base = _profile_header_context(request, username)
+    post_qs = (
+        Post.objects.filter(author=base["profile_user"])
+        .select_related("author", "author__profile", "category")
+        .prefetch_related("tags")
+        .annotate(comment_count=Count("post_comments", distinct=True))
+        .order_by("-created_at", "-id")
+    )
+    if request.user.id != base["profile_user"].id:
+        post_qs = post_qs.filter(visibility=Post.VISIBILITY_PUBLIC)
+    paginator = Paginator(post_qs, PROFILE_POSTS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
     return render(
         request,
         "accounts/profile_detail.html",
-        {"profile_user": user, "profile": profile, "posts": posts, "is_following": is_following},
+        {
+            **base,
+            "active_section": "posts",
+            "page_obj": page_obj,
+        },
+    )
+
+
+def profile_comments(request, username):
+    base = _profile_header_context(request, username)
+    comment_qs = (
+        PostComment.objects.filter(author=base["profile_user"]).select_related("post").order_by("-created_at", "-id")
+    )
+    paginator = Paginator(comment_qs, PROFILE_COMMENTS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    return render(
+        request,
+        "accounts/profile_detail.html",
+        {
+            **base,
+            "active_section": "comments",
+            "page_obj": page_obj,
+        },
     )
 
 
 @login_required(login_url="accounts:login")
 def follow_toggle(request, username):
+    if request.method != "POST":
+        return redirect("accounts:profile_detail", username=username)
     target = get_object_or_404(User, username=username)
     if target == request.user:
         messages.error(request, "不能追蹤自己。")
@@ -83,4 +141,7 @@ def follow_toggle(request, username):
     else:
         Follow.objects.get_or_create(follower=request.user, following=target)
         messages.success(request, "已追蹤。")
+    next_url = request.POST.get("next", "").strip()
+    if next_url:
+        return redirect(next_url)
     return redirect("accounts:profile_detail", username=target.username)

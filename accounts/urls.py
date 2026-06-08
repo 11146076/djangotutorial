@@ -11,6 +11,8 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("profile/edit/", views.profile_edit, name="profile_edit"),
     path("@<str:username>/follow-toggle/", views.follow_toggle, name="follow_toggle"),
+    path("@<str:username>/posts/", views.profile_posts, name="profile_posts"),
+    path("@<str:username>/comments/", views.profile_comments, name="profile_comments"),
     path("@<str:username>/", views.profile_detail, name="profile_detail"),
 ]
 

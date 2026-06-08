@@ -16,7 +16,7 @@
 
   <div class="space-y-3 sm:space-y-4">
     {% for post in posts %}
-      <article class="rounded-xl bg-white p-4 shadow sm:p-5">
+      <article class="rounded-xl bg-white p-4 shadow sm:p-5" data-post-article>
         <div class="mb-2 flex items-start gap-3">
           <a href="{% url 'accounts:profile_detail' post.author.username %}" class="shrink-0">
             {% if post.author.profile.avatar %}
@@ -36,7 +36,10 @@
             {% if post.tags.all %}
               <div class="mt-1 flex flex-wrap gap-2">
                 {% for tag in post.tags.all %}
-                  <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">#{{ tag.name }}</span>
+                  <a
+                    href="{% url 'posts:feed' %}?tag={{ tag.id }}"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#{{ tag.name }}</a>
                 {% endfor %}
               </div>
             {% endif %}
@@ -59,9 +62,11 @@
           {{ post.content|safe }}
         </div>
 
-        {% if post.image %}
-          <img src="{{ post.image.url }}" alt="" class="mb-2 w-full max-h-[min(400px,60vh)] rounded-lg object-cover">
-        {% endif %}
+        {% for img in post.gallery_images %}
+          <div class="mb-2 flex w-full justify-center">
+            <img src="{{ img.url }}" alt="" class="post-cover-image max-h-[500px] w-auto max-w-full object-contain rounded-lg">
+          </div>
+        {% endfor %}
       </article>
     {% empty %}
       <div class="rounded-xl bg-white px-6 py-10 text-center text-slate-500 shadow sm:px-10 sm:py-12">

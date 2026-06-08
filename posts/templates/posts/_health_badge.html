@@ -1,0 +1,17 @@
+{% if insight and insight.status == "completed" %}
+  {% if inline %}
+    <div class="health-badge-inline rank-{{ insight.health_rank }}" data-health-badge>
+      <span class="health-badge-score rank-{{ insight.health_rank }}">{{ insight.health_rank }}</span>
+      <p class="health-badge-kcal">{{ insight.calories }} kcal</p>
+      <p class="health-badge-meta">健康 {{ insight.health_rank }}</p>
+      <p class="health-badge-reason">{{ insight.reason }}</p>
+    </div>
+  {% else %}
+    <div class="health-badge rank-{{ insight.health_rank }}" data-health-badge>
+      <span class="health-badge-score rank-{{ insight.health_rank }}">{{ insight.health_rank }}</span>
+      <p class="health-badge-kcal">{{ insight.calories }} kcal</p>
+      <p class="health-badge-meta">健康 {{ insight.health_rank }}</p>
+      <p class="health-badge-reason">{{ insight.reason }}</p>
+    </div>
+  {% endif %}
+{% endif %}

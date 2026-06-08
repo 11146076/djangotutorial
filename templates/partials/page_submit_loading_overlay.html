@@ -1,0 +1,55 @@
+{# 全頁送出載入（與 AI 助理相同的 Loading 動畫氣泡）；在表單上加 data-show-loading-on-submit 啟用 #}
+<div
+  id="page-submit-loading"
+  class="fixed inset-0 z-[90] hidden flex items-center justify-center bg-slate-900/45 backdrop-blur-[1px]"
+  aria-hidden="true"
+  aria-busy="false"
+  role="status"
+  aria-live="polite"
+>
+  <div class="mx-4 flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-2xl">
+    <span class="sr-only" id="page-submit-loading-label">載入中，請稍候</span>
+    <div class="food-ai-loader-bubble min-w-[156px] rounded-2xl border border-slate-200 px-4 py-3">
+      <div class="food-ai-loading-root" role="presentation">
+        <div class="food-ai-loading-scalebox">
+          <div class="divider" aria-hidden="true"></div>
+          <p class="loading-text" aria-hidden="true">
+            <span class="letter">L</span>
+            <span class="letter">o</span>
+            <span class="letter">a</span>
+            <span class="letter">d</span>
+            <span class="letter">i</span>
+            <span class="letter">n</span>
+            <span class="letter">g</span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <p class="text-sm font-medium text-slate-600">載入中…</p>
+  </div>
+</div>
+<script>
+  (function () {
+    var overlay = document.getElementById("page-submit-loading");
+    if (!overlay) return;
+    function hideOverlay() {
+      overlay.classList.add("hidden");
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.setAttribute("aria-busy", "false");
+    }
+    function showOverlay() {
+      overlay.classList.remove("hidden");
+      overlay.setAttribute("aria-hidden", "false");
+      overlay.setAttribute("aria-busy", "true");
+    }
+    window.addEventListener("pageshow", hideOverlay);
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("form[data-show-loading-on-submit]").forEach(function (form) {
+        form.addEventListener("submit", function () {
+          if (form.getAttribute("data-loading-skip") === "1") return;
+          showOverlay();
+        });
+      });
+    });
+  })();
+</script>

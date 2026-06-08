@@ -1,53 +1,164 @@
-<div class="rounded-lg border border-slate-200 bg-white px-3 py-2">
-  <div class="flex items-center justify-between gap-2">
-    <div class="min-w-0 text-sm">
-      <strong class="text-slate-800">{{ node.author.username }}</strong>
-      <span class="ml-2 text-xs text-slate-400">{{ node.created_at|timesince }} 前</span>
-      {% if node.parent_id %}
-        <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">回覆</span>
-      {% endif %}
-      {% if node.is_pinned %}
-        <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-700">置頂</span>
-      {% endif %}
-      {% if node.is_locked %}
-        <span class="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] text-rose-700">鎖定</span>
-      {% endif %}
+<div class="space-y-2" data-comment-id="{{ node.id }}">
+<div class="rounded-lg border border-slate-200 bg-white px-3 py-2" x-data="{ editing: false }">
+  <div class="flex items-start justify-between gap-2">
+    <div class="flex min-w-0 items-start gap-2 flex-1">
+      <a href="{% url 'accounts:profile_detail' node.author.username %}" class="mt-0.5 shrink-0">
+        {% if node.author.profile.avatar %}
+          <img src="{{ node.author.profile.avatar.url }}" alt="" class="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200">
+        {% else %}
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-400 text-xs font-semibold text-white ring-1 ring-slate-200">
+            {{ node.author.username|slice:":1"|upper }}
+          </div>
+        {% endif %}
+      </a>
+      <div class="min-w-0 text-sm">
+        <strong class="text-slate-800">{{ node.author.username }}</strong>
+        <span class="ml-2 text-xs text-slate-400">{{ node.created_at|timesince }} 前</span>
+        {% if node.parent_id %}
+          <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">回覆</span>
+        {% endif %}
+        {% if node.is_pinned %}
+          <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-700">置頂</span>
+        {% endif %}
+        {% if node.is_locked %}
+          <span class="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] text-rose-700">鎖定</span>
+        {% endif %}
+      </div>
     </div>
+
+    {% if user.is_authenticated and user.id == node.author_id %}
+      <div class="mt-0.5 flex shrink-0 items-center gap-2 whitespace-nowrap">
+        <button @click="editing = true" class="inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium text-slate-400 transition-colors hover:text-sky-600">
+          編輯
+        </button>
+        <form method="post" action="{% url 'posts:comment_delete' post.pk node.id %}" class="inline" onsubmit="return confirm('確定要刪除這則留言嗎？');">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium text-slate-400 transition-colors hover:text-rose-600">
+            刪除
+          </button>
+        </form>
+      </div>
+    {% endif %}
   </div>
 
-  <p class="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{{ node.content }}</p>
+  <div x-show="!editing">
+    <p class="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{{ node.content }}</p>
 
-  {% if user.is_authenticated and not node.is_locked %}
-    <details class="mt-2">
-      <summary class="cursor-pointer text-sm font-medium text-sky-600 hover:underline">回覆</summary>
-      <form action="{% url 'posts:comment_create' post.pk %}" method="post" class="mt-2">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-        <input type="hidden" name="parent_id" value="{{ node.id }}">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-          <input
-            type="text"
-            name="content"
-            class="min-h-11 w-full flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm"
-            placeholder="回覆 {{ node.author.username }}..."
-            required
-            autocomplete="off"
+    {% if user.is_authenticated %}
+      <div
+        class="mt-2 flex flex-col gap-1"
+        x-data="commentLikeBlock({% if node.id in liked_comment_ids %}true{% else %}false{% endif %}, {{ node.like_count|default:0 }})"
+      >
+        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <span x-text="count + ' 讚'"></span>
+          <form
+            method="post"
+            action="{% url 'posts:comment_like_toggle' post.pk node.id %}"
+            class="inline"
+            @submit.prevent="submitCommentLike"
           >
-          <button
-            type="submit"
-            class="min-h-11 w-full shrink-0 rounded-lg border border-sky-300 px-4 py-2 text-sm font-medium text-sky-600 hover:bg-sky-50 sm:w-auto"
-          >送出</button>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button
+              type="submit"
+              class="rounded-md border border-rose-200 bg-rose-50/80 px-2 py-1 text-[11px] font-medium text-rose-700 hover:bg-rose-100"
+              :disabled="submitting"
+              x-text="isLiked ? '取消按讚' : '按讚'"
+            ></button>
+          </form>
         </div>
-      </form>
-    </details>
-  {% endif %}
+        <p x-show="showMsg" x-cloak class="text-[11px] text-slate-500" x-text="msgText"></p>
+      </div>
+    {% else %}
+      <p class="mt-2 text-xs text-slate-400">{{ node.like_count|default:0 }} 讚</p>
+    {% endif %}
+
+    {% if user.is_authenticated and not node.is_locked %}
+      <div class="mt-2" x-data="{ showReplyForm: false }" data-reply-form-wrap>
+        <button
+          type="button"
+          class="text-sm font-medium text-sky-600 hover:underline"
+          @click="showReplyForm = !showReplyForm"
+          x-text="showReplyForm ? '收起回覆' : '回覆'"
+        ></button>
+        <form
+          action="{% url 'posts:comment_create' post.pk %}"
+          method="post"
+          class="js-comment-create-form mt-2"
+          x-show="showReplyForm"
+          x-cloak
+        >
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <input type="hidden" name="parent_id" value="{{ node.id }}">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <input
+              type="text"
+              name="content"
+              class="min-h-11 w-full flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm"
+              placeholder="回覆 {{ node.author.username }}..."
+              required
+              autocomplete="off"
+            >
+            <button
+              type="submit"
+              class="min-h-11 w-full shrink-0 rounded-lg border border-sky-300 px-4 py-2 text-sm font-medium text-sky-600 hover:bg-sky-50 sm:w-auto"
+            >送出</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  <div x-show="editing" x-cloak class="mt-2">
+    <form method="post" action="{% url 'posts:comment_edit' post.pk node.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <textarea name="content" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" rows="2" required>{{ node.content }}</textarea>
+      <div class="mt-2 flex justify-end gap-2">
+        <button type="button" @click="editing = false" class="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors">取消</button>
+        <button type="submit" class="rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-600 transition-colors">儲存</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 {% if node.replies %}
-  <div class="mt-2 space-y-2 border-l border-slate-200 pl-4">
-    {% for child in node.replies %}
-      {% include "posts/_comment_node.html" with node=child %}
-    {% endfor %}
-  </div>
+  {# 有子留言：預設折疊；replyCount 為 views 計算的整棵子樹回覆數（含多層），非僅直接子節點 #}
+  <details
+    class="mt-2"
+    data-reply-toggle
+    x-data="{ showReplies: false, replyCount: {{ node.subtree_reply_count|default:0 }} }"
+    :open="showReplies"
+    @toggle="showReplies = $el.open"
+  >
+    <summary class="cursor-pointer text-sm font-medium text-sky-500 transition-colors duration-200 hover:text-sky-600">
+      查看 <span x-text="replyCount"></span> 則回覆
+    </summary>
+    {# x-show：未展開時不顯示子樹；x-transition：簡單淡入淡出（專案未載入 @alpinejs/collapse，故不用 x-collapse） #}
+    <div
+      class="mt-2 space-y-2 border-l border-slate-200 pl-4"
+      data-comment-children="{{ node.id }}"
+      x-show="showReplies"
+      x-cloak
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 translate-y-0.5"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+    >
+      {% for child in node.replies %}
+        {% include "posts/_comment_node.html" with node=child %}
+      {% endfor %}
+    </div>
+  </details>
+{% else %}
+  {# 尚無子留言：保留容器給 AJAX 插入第一則回覆，維持 hidden #}
+  <div
+    class="mt-2 space-y-2 border-l border-slate-200 pl-4 hidden"
+    data-comment-children="{{ node.id }}"
+  ></div>
 {% endif %}
-
+</div>

@@ -1,0 +1,3020 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>首頁 - 等等吃啥</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/js/food_ai_assistant.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    html body [x-cloak] { display: none; }
+    .apple-hover-card,
+    .apple-hover-btn {
+      transform: translateZ(0);
+      transition:
+        transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform, box-shadow;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .apple-hover-card:hover {
+        transform: translateY(-6px) scale(1.012);
+        box-shadow:
+          0 20px 35px -18px rgb(15 23 42 / 0.38),
+          0 10px 16px -12px rgb(15 23 42 / 0.24);
+      }
+      .apple-hover-btn:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow:
+          0 10px 18px -12px rgb(15 23 42 / 0.35),
+          0 6px 10px -8px rgb(15 23 42 / 0.2);
+      }
+    }
+    .apple-hover-btn:active {
+      transform: translateY(0) scale(0.985);
+      transition-duration: 140ms;
+    }
+    .scroll-reveal-item {
+      opacity: 0;
+      transform: translateY(28px);
+      transition:
+        opacity 760ms ease,
+        transform 760ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: opacity, transform;
+    }
+    .scroll-reveal-item.scroll-revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .apple-hover-card,
+      .apple-hover-btn {
+        transform: none !important;
+        transition: none !important;
+      }
+      .scroll-reveal-item {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* Food AI assistant loading animation (from provided source, safely scoped). */
+    .food-ai-loader-bubble {
+      background: #f1f5f9;
+    }
+    .food-ai-loading-root {
+      font-family: "Roboto", sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .food-ai-loading-root .food-ai-loading-scalebox,
+    .food-ai-loading-root .divider,
+    .food-ai-loading-root .loading-text,
+    .food-ai-loading-root .loading-text::before,
+    .food-ai-loading-root .loading-text .letter,
+    .food-ai-loading-root .loading-text .letter::before {
+      box-sizing: border-box;
+    }
+    .food-ai-loading-root .food-ai-loading-scalebox {
+      position: relative;
+      width: 240px;
+      height: 120px;
+      transform: scale(0.34);
+      transform-origin: left top;
+      margin-right: -155px;
+      margin-bottom: -78px;
+      margin-top: -6px;
+      pointer-events: none;
+    }
+    .food-ai-loading-root .divider {
+      position: absolute;
+      z-index: 2;
+      top: 65px;
+      left: 200px;
+      width: 50px;
+      height: 15px;
+      background: #f1f5f9;
+    }
+    .food-ai-loading-root .loading-text {
+      position: relative;
+      font-size: 3.75rem;
+      font-weight: 300;
+      margin: 0;
+      white-space: nowrap;
+      color: #334155;
+    }
+    .food-ai-loading-root .loading-text::before {
+      position: absolute;
+      content: "";
+      z-index: 1;
+      top: 40px;
+      left: 115px;
+      width: 6px;
+      height: 6px;
+      background: #334155;
+      border-radius: 50%;
+      animation: dotMove 1800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) infinite;
+    }
+    .food-ai-loading-root .loading-text .letter {
+      display: inline-block;
+      position: relative;
+      color: #334155;
+      letter-spacing: 8px;
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(1) {
+      transform-origin: 100% 70%;
+      transform: scale(1, 1.275);
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(1)::before {
+      position: absolute;
+      content: "";
+      top: 22px;
+      left: 0;
+      width: 14px;
+      height: 36px;
+      background: #f1f5f9;
+      transform-origin: 100% 0;
+      animation: lineStretch 1800ms cubic-bezier(0.25, 0.25, 0.75, 0.75) infinite;
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(5) {
+      transform-origin: 100% 70%;
+      animation: letterStretch 1800ms cubic-bezier(0.25, 0.23, 0.73, 0.75) infinite;
+    }
+    .food-ai-loading-root .loading-text .letter:nth-child(5)::before {
+      position: absolute;
+      content: "";
+      top: 15px;
+      left: 2px;
+      width: 9px;
+      height: 15px;
+      background: #f1f5f9;
+    }
+    @keyframes dotMove {
+      0%, 100% {
+        transform: rotate(180deg) translate(-110px, -10px) rotate(-180deg);
+      }
+      50% {
+        transform: rotate(0deg) translate(-111px, 10px) rotate(0deg);
+      }
+    }
+    @keyframes letterStretch {
+      0%, 100% {
+        transform: scale(1, 0.35);
+        transform-origin: 100% 75%;
+      }
+      8%, 28% {
+        transform: scale(1, 2.125);
+        transform-origin: 100% 67%;
+      }
+      37% {
+        transform: scale(1, 0.875);
+        transform-origin: 100% 75%;
+      }
+      46% {
+        transform: scale(1, 1.03);
+        transform-origin: 100% 75%;
+      }
+      50%, 97% {
+        transform: scale(1);
+        transform-origin: 100% 75%;
+      }
+    }
+    @keyframes lineStretch {
+      0%, 45%, 70%, 100% {
+        transform: scaleY(0.125);
+      }
+      49% {
+        transform: scaleY(0.75);
+      }
+      50% {
+        transform: scaleY(0.875);
+      }
+      53% {
+        transform: scaleY(0.5);
+      }
+      60% {
+        transform: scaleY(0);
+      }
+      68% {
+        transform: scaleY(0.18);
+      }
+    }
+  </style>
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('eatWhatWheel', () => {
+        const el = document.getElementById('wheel-category-items');
+        let categories = [];
+        if (el && el.textContent) {
+          try {
+            categories = JSON.parse(el.textContent);
+          } catch (e) {
+            categories = [];
+          }
+        }
+        const feedListUrl = (document.body.dataset.feedListUrl || '/').replace(/\/?$/, '/');
+        return {
+          open: false,
+          rotation: 0,
+          spinning: false,
+          categories,
+          feedListUrl,
+          result: '',
+          picked: null,
+          browseCategoryUrl(cat) {
+            const u = new URL(this.feedListUrl, window.location.origin);
+            u.searchParams.set('category', String(cat.id));
+            return u.pathname + u.search + u.hash;
+          },
+          /** 依目前 rotation 反推指針（左側 270°）下的分區；與 conic from -90deg、分區中心角 (i+0.5)*seg-90 一致 */
+          segmentIndexUnderPointer() {
+            const n = this.categories.length;
+            if (!n) return 0;
+            const seg = 360 / n;
+            const R = ((this.rotation % 360) + 360) % 360;
+            const norm = (a) => ((a % 360) + 360) % 360;
+            const thetaAtPointer = norm(270 + R);
+            const shifted = norm(thetaAtPointer + 90);
+            let i = Math.floor(shifted / seg);
+            if (i >= n) i = n - 1;
+            return i;
+          },
+          wheelGradient() {
+            const n = this.categories.length;
+            if (!n) return 'conic-gradient(from -90deg, #94a3b8 0deg 360deg)';
+            const seg = 360 / n;
+            const colors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#22d3ee', '#818cf8', '#c084fc'];
+            const stops = this.categories.map((_, i) => `${colors[i % colors.length]} ${i * seg}deg ${(i + 1) * seg}deg`).join(', ');
+            return `conic-gradient(from -90deg, ${stops})`;
+          },
+          spin() {
+            if (this.spinning || !this.categories.length) return;
+            this.spinning = true;
+            this.picked = null;
+            this.result = '';
+            const n = this.categories.length;
+            const winner = Math.floor(Math.random() * n);
+            const seg = 360 / n;
+            const extra = 360 * (5 + Math.floor(Math.random() * 3));
+            const currentMod = ((this.rotation % 360) + 360) % 360;
+            const POINTER_DEG = 270;
+            const segmentCenterDeg = (winner + 0.5) * seg - 90;
+            const targetMod = ((segmentCenterDeg - POINTER_DEG) % 360 + 360) % 360;
+            let delta = targetMod - currentMod;
+            if (delta < 0) delta += 360;
+            this.rotation += extra + delta;
+            window.setTimeout(() => {
+              const idx = this.segmentIndexUnderPointer();
+              const chosen = this.categories[idx];
+              this.picked = chosen;
+              this.result = `結果：「${chosen.name}」`;
+              this.spinning = false;
+            }, 4000);
+          },
+        };
+      });
+    });
+  </script>
+  
+
+<link rel="stylesheet" href="/static/css/health_mode_ui.css">
+<style>
+  /* 按下「回到最上方」時暫時啟用，讓捲動結束貼齊頂部區塊（配合 sticky 導覽列） */
+  html.feed-back-to-top-snap {
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 4.5rem;
+  }
+  @media (min-width: 640px) {
+    html.feed-back-to-top-snap {
+      scroll-padding-top: 5rem;
+    }
+  }
+  #feed-top-snap {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+  }
+
+  /* Make the compose editor shorter on the feed page only */
+  .post-compose .cke_contents {
+    height: 180px !important;
+  }
+  .post-compose .cke_bottom {
+    display: none;
+  }
+  .post-compose-details > summary {
+    list-style: none;
+  }
+  .post-compose-details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .post-compose-details[open] .compose-chevron {
+    transform: rotate(180deg);
+  }
+
+  .health-mode-toggle {
+    --track-off: #eef2f7;
+    --mint: #8ee8ca;
+    --lavender: #c9bcff;
+    --peach: #ffcfae;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 220ms cubic-bezier(.22,.9,.33,1);
+  }
+  .health-mode-toggle:hover {
+    transform: scale(1.03);
+  }
+  .health-mode-track {
+    width: 56px;
+    height: 32px;
+    border-radius: 999px;
+    position: relative;
+    background: var(--track-off);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 6px 16px rgba(15,23,42,.1);
+    transition: all 260ms cubic-bezier(.22,.9,.33,1);
+  }
+  .health-mode-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 5px 12px rgba(15,23,42,.18);
+    transition: all 260ms cubic-bezier(.22,.9,.33,1);
+  }
+  .health-mode-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(51 65 85);
+  }
+  .health-mode-enabled .health-mode-track {
+    background: linear-gradient(135deg, var(--mint), var(--lavender), var(--peach));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 10px 20px rgba(142,232,202,.35);
+  }
+  .health-mode-enabled .health-mode-thumb {
+    left: 27px;
+  }
+</style>
+
+</head>
+<body
+  class="min-h-dvh bg-slate-100 text-slate-800 antialiased pb-[env(safe-area-inset-bottom)]"
+  data-feed-list-url="/"
+  
+>
+  <script id="wheel-category-items" type="application/json">[{"id": 23, "name": "\u6b63\u9910"}, {"id": 25, "name": "\u751c\u9ede / \u96f6\u98df"}, {"id": 22, "name": "\u65e9\u9910"}, {"id": 24, "name": "\u5bb5\u591c"}, {"id": 27, "name": "\u8f15\u98df / \u6c99\u62c9"}, {"id": 26, "name": "\u98f2\u6599 / \u624b\u6416"}]</script>
+  <nav class="sticky top-0 z-50 bg-sky-300 text-white shadow-sm" x-data="{ open: false }" @keydown.window.escape="open = false">
+    <div class="mx-auto max-w-5xl px-3 sm:px-4">
+      <div class="flex min-h-14 items-center justify-between gap-2 py-2 sm:min-h-16 sm:py-3">
+        <a class="shrink-0 text-2xl font-bold tracking-tight sm:text-3xl md:text-2xl flex items-center" href="/">🍽 等等吃啥</a>
+
+        
+        <div class="hidden items-center gap-3 text-base font-semibold md:flex md:gap-4 md:text-lg">
+          <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="/">首頁</a>
+          
+            <a class="rounded-lg px-3 py-2 hover:bg-white/15" href="/accounts/login/">登入</a>
+            <a class="rounded-lg bg-white/15 px-3 py-2 hover:bg-white/25" href="/accounts/register/">註冊</a>
+          
+        </div>
+
+        
+        <button
+          type="button"
+          class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 p-2 md:hidden"
+          @click="open = !open"
+          :aria-expanded="open"
+          aria-controls="mobile-nav"
+          aria-label="開啟選單"
+        >
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            <path x-cloak x-show="open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      
+      <div
+        id="mobile-nav"
+        class="border-t border-white/25 py-2 md:hidden"
+        x-show="open"
+        x-cloak
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-1"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-1"
+      >
+        <div class="flex flex-col gap-1 pb-2">
+          <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="/" @click="open = false">首頁</a>
+          
+            <a class="min-h-11 rounded-lg px-4 py-3 text-base font-semibold hover:bg-white/15" href="/accounts/login/" @click="open = false">登入</a>
+            <a class="min-h-11 rounded-lg bg-white/15 px-4 py-3 text-base font-semibold hover:bg-white/25" href="/accounts/register/" @click="open = false">註冊</a>
+          
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  
+  <div x-data="eatWhatWheel()" @keydown.escape.window="open = false">
+    <button
+      type="button"
+      class="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-white shadow-lg ring-2 ring-amber-200/80 transition hover:scale-105 hover:bg-amber-400 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 sm:bottom-8 sm:right-8"
+      aria-haspopup="dialog"
+      :aria-expanded="open"
+      aria-label="開啟分類轉盤"
+      @click="open = true; picked = null; result = ''"
+    >
+      <i class="fa-solid fa-dharmachakra text-2xl" aria-hidden="true"></i>
+    </button>
+
+    <div
+      class="fixed inset-0 z-[70] flex items-end justify-center p-4 sm:items-center"
+      x-show="open"
+      x-cloak
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wheel-dialog-title"
+    >
+      <div class="absolute inset-0 bg-slate-900/50" @click="open = false; picked = null; result = ''" aria-hidden="true"></div>
+      <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl sm:p-6">
+        <div class="mb-4 flex items-start justify-between gap-3">
+          <h2 id="wheel-dialog-title" class="text-xl font-bold text-slate-800">隨機分類轉轉</h2>
+          <button
+            type="button"
+            class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            aria-label="關閉"
+            @click="open = false; picked = null; result = ''"
+          >
+            <i class="fa-solid fa-xmark text-xl" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="mx-auto flex w-full max-w-[320px] items-center justify-center gap-1 sm:gap-2">
+          <div class="pointer-events-none shrink-0 self-center" aria-hidden="true">
+            <div class="h-0 w-0 border-y-[12px] border-y-transparent border-l-[18px] border-l-rose-600 drop-shadow"></div>
+          </div>
+          <div class="relative min-w-0 flex-1 max-w-[280px]">
+          <div class="rounded-full p-1.5 shadow-inner ring-4 ring-slate-100">
+            <div class="relative mx-auto aspect-square w-full overflow-hidden rounded-full">
+              <div
+                class="absolute inset-0 origin-center transition-transform duration-[4000ms] ease-[cubic-bezier(0.17,0.67,0.12,0.99)] will-change-transform"
+                :style="{ transform: `rotate(-${rotation}deg)` }"
+              >
+                <div class="absolute inset-0 rounded-full" :style="{ background: wheelGradient() }"></div>
+                <template x-for="(c, i) in categories" :key="c.id">
+                  <span
+                    class="pointer-events-none absolute left-1/2 top-1/2 w-[5.5rem] text-center text-[11px] font-bold leading-tight text-white drop-shadow [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] sm:w-24 sm:text-sm"
+                    :style="`transform: translate(-50%, -50%) rotate(${i * (360 / categories.length) + (360 / categories.length) / 2 - 90}deg) translateY(-100px)`"
+                    x-text="c.name"
+                  ></span>
+                </template>
+              </div>
+              <div class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+                <div class="h-14 w-14 rounded-full bg-white/95 shadow-md ring-2 ring-slate-200/90 sm:h-16 sm:w-16"></div>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <p class="mt-4 min-h-[1.75rem] text-center text-sm text-slate-600" x-show="!categories.length">
+          尚無已使用於貼文的分類，發文時選擇分類後即可使用轉盤。
+        </p>
+        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-sky-700 sm:text-lg" x-show="categories.length && result" x-text="result"></p>
+
+        <div class="mt-5 flex flex-col items-center gap-3" x-show="categories.length">
+          <a
+            x-show="picked && !spinning"
+            x-cloak
+            class="inline-flex min-h-11 w-full max-w-xs items-center justify-center rounded-xl bg-emerald-600 px-6 py-3 text-center text-base font-semibold text-white shadow hover:bg-emerald-500"
+            :href="picked ? browseCategoryUrl(picked) : '#'"
+            :aria-label="picked ? '查看「' + picked.name + '」分類的貼文列表' : '查看分類貼文列表'"
+          >
+            查看該分類的貼文列表
+          </a>
+          <button
+            type="button"
+            class="rounded-xl bg-sky-500 px-8 py-3 text-base font-semibold text-white shadow hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="spinning || !categories.length"
+            @click="spin()"
+          >
+            <span x-show="!spinning">開始轉！</span>
+            <span x-show="spinning" x-cloak>轉動中…</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <main class="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
+    
+    
+<div class="mx-auto w-full max-w-3xl">
+  <div id="feed-top-snap" class="mb-4 rounded-xl bg-white p-4 shadow sm:p-5">
+    <div class="mb-3 flex items-center justify-between gap-3">
+      <p class="text-sm font-semibold text-slate-700">探索美食動態</p>
+      <button id="health-mode-toggle" type="button" class="health-mode-toggle" aria-pressed="false">
+        <span class="health-mode-track"><span class="health-mode-thumb"></span></span>
+        <span class="health-mode-label">健康達人</span>
+      </button>
+    </div>
+    <form id="feed-search-form" action="/" method="get" data-show-loading-on-submit class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+      <input
+        type="text"
+        name="q"
+        value=""
+        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm"
+        placeholder="搜尋貼文內容或發文者"
+      >
+      <div class="flex gap-2">
+        <button type="submit" class="min-h-11 rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600">搜尋</button>
+        <a href="/" class="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">清除</a>
+      </div>
+
+      <div id="feed-selected-categories-box" class="sm:col-span-2 hidden">
+        <div class="mt-1 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
+          <p class="text-xs font-medium text-emerald-700">搜尋中分類</p>
+          <div id="feed-selected-categories-list" class="mt-1 flex flex-wrap gap-1.5">
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+          </div>
+        </div>
+      </div>
+
+      <div id="feed-selected-tags-box" class="sm:col-span-2 hidden">
+        <div class="mt-1 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
+          <p class="text-xs font-medium text-sky-700">搜尋中標籤</p>
+          <div id="feed-selected-tags-list" class="mt-1 flex flex-wrap gap-1.5">
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+              
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+        <div>
+          <label for="feed-category" class="mb-1 block text-sm font-medium text-slate-600">分類</label>
+          <select
+            id="feed-category"
+            name="category"
+            multiple
+            size="5"
+            class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 outline-none ring-sky-200 focus:ring"
+            aria-describedby="feed-filter-hint"
+          >
+            
+              <option value="24" >宵夜</option>
+            
+              <option value="22" >早餐</option>
+            
+              <option value="23" >正餐</option>
+            
+              <option value="25" >甜點 / 零食</option>
+            
+              <option value="27" >輕食 / 沙拉</option>
+            
+              <option value="26" >飲料 / 手搖</option>
+            
+          </select>
+        </div>
+        <div>
+          <label for="feed-tag" class="mb-1 block text-sm font-medium text-slate-600">標籤</label>
+          <select
+            id="feed-tag"
+            name="tag"
+            multiple
+            size="5"
+            class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 outline-none ring-sky-200 focus:ring"
+            aria-describedby="feed-filter-hint"
+          >
+            
+              <option value="39" >#健康低卡</option>
+            
+              <option value="36" >#小資平價</option>
+            
+              <option value="42" >#氣氛佳</option>
+            
+              <option value="33" >#甜</option>
+            
+              <option value="38" >#異國料理</option>
+            
+              <option value="37" >#約會聚餐</option>
+            
+              <option value="40" >#素食友善</option>
+            
+              <option value="34" >#苦</option>
+            
+              <option value="43" >#要排隊</option>
+            
+              <option value="41" >#踩雷勿近</option>
+            
+              <option value="35" >#辣</option>
+            
+              <option value="32" >#酸</option>
+            
+          </select>
+        </div>
+      </div>
+      <p id="feed-filter-hint" class="text-xs text-slate-500 sm:col-span-2">可複選：按住 Ctrl再點選多項；不選表示不限。</p>
+    </form>
+
+    
+  </div>
+
+  
+
+  <div class="space-y-3 sm:space-y-4">
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="32" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@123/" class="shrink-0">
+            
+              <img src="/media/avatars/fire_hydrant.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@123/" class="truncate font-semibold text-slate-800 hover:underline">123</a>
+              <span class="text-sm text-slate-500">58 分 前</span>
+              <span class="text-sm text-slate-500">· 甜點 / 零食</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=39"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#健康低卡</a>
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=40"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#素食友善</a>
+                
+                  <a
+                    href="/?tag=32"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#酸</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/32/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">紫花酢醬草</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>路邊的野花，好吃但酸酸的~</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/%E7%B4%AB%E8%8A%B1%E9%85%A2%E9%86%AC%E8%8D%89-2-scaled.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-A" data-health-badge>
+      <span class="health-badge-score rank-A">A</span>
+      <p class="health-badge-kcal">5 kcal</p>
+      <p class="health-badge-meta">健康 A</p>
+      <p class="health-badge-reason">天然野菜熱量極低，營養豐富。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>0 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="30" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@apple/" class="shrink-0">
+            
+              <img src="/media/avatars/20221202173513uid1524.jpg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@apple/" class="truncate font-semibold text-slate-800 hover:underline">apple</a>
+              <span class="text-sm text-slate-500">1 日 前</span>
+              <span class="text-sm text-slate-500">· 輕食 / 沙拉</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=39"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#健康低卡</a>
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=37"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#約會聚餐</a>
+                
+                  <a
+                    href="/?tag=40"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#素食友善</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/30/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">藜麥烤鷄沙拉</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>來麥當勞吃沙拉真健康</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/%E9%BA%A5%E7%95%B6%E5%8B%9E.PNG" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-B" data-health-badge>
+      <span class="health-badge-score rank-B">B</span>
+      <p class="health-badge-kcal">350 kcal</p>
+      <p class="health-badge-meta">健康 B</p>
+      <p class="health-badge-reason">炸雞塊含油脂，但蔬菜多仍算健康。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="28" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@apple/" class="shrink-0">
+            
+              <img src="/media/avatars/20221202173513uid1524.jpg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@apple/" class="truncate font-semibold text-slate-800 hover:underline">apple</a>
+              <span class="text-sm text-slate-500">1 日, 4 小時 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/28/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">喇舌麵</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>在華山，<strong>5:30</strong>左右就賣完了~</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel " data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/S__12763201.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/S__12763202.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot "
+                    data-carousel-dot
+                    data-index="1"
+                    aria-label="切換到第 2 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-B" data-health-badge>
+      <span class="health-badge-score rank-B">B</span>
+      <p class="health-badge-kcal">450 kcal</p>
+      <p class="health-badge-meta">健康 B</p>
+      <p class="health-badge-reason">含肉與豆製品，營養均衡但熱量中等。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>2 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="27" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@admin/" class="shrink-0">
+            
+              <img src="/media/avatars/%E6%88%91%E6%83%B3%E5%9B%9E%E5%AE%B6_QRzXNfo.png" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@admin/" class="truncate font-semibold text-slate-800 hover:underline">admin</a>
+              <span class="text-sm text-slate-500">1 日, 6 小時 前</span>
+              <span class="text-sm text-slate-500">· 早餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=43"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#要排隊</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/27/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">阜杭豆漿</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p><s><span style="color:#999999;">到底在紅什麼🤔</span></s></p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/%E9%98%9C%E6%9D%AD%E8%B1%86%E6%BC%BF.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">1200 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">油炸與澱粉多，熱量偏高。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>0 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>3 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>0 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="26" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@admin/" class="shrink-0">
+            
+              <img src="/media/avatars/%E6%88%91%E6%83%B3%E5%9B%9E%E5%AE%B6_QRzXNfo.png" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@admin/" class="truncate font-semibold text-slate-800 hover:underline">admin</a>
+              <span class="text-sm text-slate-500">1 日, 6 小時 前</span>
+              <span class="text-sm text-slate-500">· 早餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=42"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#氣氛佳</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/26/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">華國早餐店</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p><span style="color:#f39c12;"><strong>3號</strong></span></p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/%E8%8F%AF%E5%9C%8B%E6%97%A9%E9%A4%90%E5%BA%9711.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">650 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">高油高鈉，營養不均衡。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="25" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@boss/" class="shrink-0">
+            
+              <img src="/media/avatars/Dinotaeng_UGpYB0P.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@boss/" class="truncate font-semibold text-slate-800 hover:underline">boss</a>
+              <span class="text-sm text-slate-500">1 日, 21 小時 前</span>
+              <span class="text-sm text-slate-500">· 飲料 / 手搖</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=33"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#甜</a>
+                
+                  <a
+                    href="/?tag=43"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#要排隊</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/25/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">八曜和茶-柚香菌乳茶</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>新口味還行</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/images.jfif" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">180 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">含益生菌但糖分偏高，適量飲用較佳。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>2 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>6 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="23" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@boss/" class="shrink-0">
+            
+              <img src="/media/avatars/Dinotaeng_UGpYB0P.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@boss/" class="truncate font-semibold text-slate-800 hover:underline">boss</a>
+              <span class="text-sm text-slate-500">4 日, 5 小時 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=38"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#異國料理</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/23/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">港式料理餐廳</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>倒了哭ㄚ</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/S__19202390.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-D" data-health-badge>
+      <span class="health-badge-score rank-D">D</span>
+      <p class="health-badge-kcal">1200 kcal</p>
+      <p class="health-badge-meta">健康 D</p>
+      <p class="health-badge-reason">油炸與加工肉品多，熱量高。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>6 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>2 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="22" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@boss/" class="shrink-0">
+            
+              <img src="/media/avatars/Dinotaeng_UGpYB0P.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@boss/" class="truncate font-semibold text-slate-800 hover:underline">boss</a>
+              <span class="text-sm text-slate-500">4 日, 5 小時 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=38"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#異國料理</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/22/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">蟹黃麵</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>nope</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/S__19202389.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">650 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">麵食為主，配菜含油脂與調味較多。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>0 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>1 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="21" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@123/" class="shrink-0">
+            
+              <img src="/media/avatars/fire_hydrant.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@123/" class="truncate font-semibold text-slate-800 hover:underline">123</a>
+              <span class="text-sm text-slate-500">4 日, 5 小時 前</span>
+              <span class="text-sm text-slate-500">· 甜點 / 零食</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=42"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#氣氛佳</a>
+                
+                  <a
+                    href="/?tag=33"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#甜</a>
+                
+                  <a
+                    href="/?tag=37"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#約會聚餐</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/21/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">Mr. Moan 莫恩先生布丁店</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>用布丁拯救世界!</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/%E6%93%B7%E5%8F%96.PNG" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">350 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">布丁含糖高，熱量中等，適量為佳。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>0 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>1 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>0 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="20" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@boss/" class="shrink-0">
+            
+              <img src="/media/avatars/Dinotaeng_UGpYB0P.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@boss/" class="truncate font-semibold text-slate-800 hover:underline">boss</a>
+              <span class="text-sm text-slate-500">4 日, 7 小時 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=39"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#健康低卡</a>
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/20/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">一川鍋燒麵</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>好吃但要排隊!!</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/post_comment.png" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">550 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">麵食熱量較高，但蔬菜均衡。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>0 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>0 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="19" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@boss/" class="shrink-0">
+            
+              <img src="/media/avatars/Dinotaeng_UGpYB0P.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@boss/" class="truncate font-semibold text-slate-800 hover:underline">boss</a>
+              <span class="text-sm text-slate-500">4 日, 8 小時 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=39"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#健康低卡</a>
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=35"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#辣</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/19/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">東方霸黃牛肉麵</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>紅燒牛肉麵讚</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/53075364448_2ea1a1a8cc_b.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">650 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">湯頭油膩，熱量較高。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>0 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>0 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="17" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@123/" class="shrink-0">
+            
+              <img src="/media/avatars/fire_hydrant.jpeg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@123/" class="truncate font-semibold text-slate-800 hover:underline">123</a>
+              <span class="text-sm text-slate-500">4 日, 10 小時 前</span>
+              <span class="text-sm text-slate-500">· 甜點 / 零食</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=33"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#甜</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/17/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">Dr.Q雙味蒟蒻葡萄荔枝</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>葡萄好吃</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/Dr.Q%E9%9B%99%E5%91%B3%E8%92%9F%E8%92%BB%E8%91%A1%E8%90%84%E8%8D%94%E6%9E%9D420g.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">180 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">含果凍與糖分，適量為佳。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>3 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="16" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@apple/" class="shrink-0">
+            
+              <img src="/media/avatars/20221202173513uid1524.jpg" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@apple/" class="truncate font-semibold text-slate-800 hover:underline">apple</a>
+              <span class="text-sm text-slate-500">6 日, 3 小時 前</span>
+              <span class="text-sm text-slate-500">· 宵夜</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=43"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#要排隊</a>
+                
+                  <a
+                    href="/?tag=35"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#辣</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/16/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">板橋阿國麻辣麵線</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>晚上9點才開無法內用</p>
+
+<p>&nbsp;</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel " data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/batch_DSC_9330.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/batch_DSC_9332.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/batch_DSC_9333.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot "
+                    data-carousel-dot
+                    data-index="1"
+                    aria-label="切換到第 2 張"
+                  ></button>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot "
+                    data-carousel-dot
+                    data-index="2"
+                    aria-label="切換到第 3 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-B" data-health-badge>
+      <span class="health-badge-score rank-B">B</span>
+      <p class="health-badge-kcal">180 kcal</p>
+      <p class="health-badge-meta">健康 B</p>
+      <p class="health-badge-reason">熱量適中，蔬菜增添營養。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>0 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>0 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="5" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@admin/" class="shrink-0">
+            
+              <img src="/media/avatars/%E6%88%91%E6%83%B3%E5%9B%9E%E5%AE%B6_QRzXNfo.png" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@admin/" class="truncate font-semibold text-slate-800 hover:underline">admin</a>
+              <span class="text-sm text-slate-500">4 週, 1 日 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/5/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">推薦拉麵</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>湯頭很讚，好吃~~</p>
+
+<p><img src="/media/posts/4.jpg" style="height:auto; max-width:100%;"></p>
+        </div>
+
+        
+          
+  
+    <div class="health-badge-inline rank-B" data-health-badge>
+      <span class="health-badge-score rank-B">B</span>
+      <p class="health-badge-kcal">250 kcal</p>
+      <p class="health-badge-meta">健康 B</p>
+      <p class="health-badge-reason">湯頭美味但需注意鹽分攝取。</p>
+    </div>
+  
+
+
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>5 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="3" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@admin/" class="shrink-0">
+            
+              <img src="/media/avatars/%E6%88%91%E6%83%B3%E5%9B%9E%E5%AE%B6_QRzXNfo.png" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@admin/" class="truncate font-semibold text-slate-800 hover:underline">admin</a>
+              <span class="text-sm text-slate-500">4 週, 1 日 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/3/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">吃土首選</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>份量超足，好吃！</p>
+
+<p><img src="/media/posts/2.jpg" style="height:auto; max-width:100%;"></p>
+        </div>
+
+        
+          
+  
+    <div class="health-badge-inline rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">650 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">份量足但油鹽可能過高，適量食用。</p>
+    </div>
+  
+
+
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>1 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+      <article class="relative overflow-hidden rounded-xl bg-white p-4 shadow sm:p-5" data-post-article data-post-id="2" data-scroll-reveal>
+        <div class="mb-2 flex items-start gap-3">
+          <a href="/accounts/@admin/" class="shrink-0">
+            
+              <img src="/media/avatars/%E6%88%91%E6%83%B3%E5%9B%9E%E5%AE%B6_QRzXNfo.png" alt="" class="h-11 w-11 rounded-full object-cover ring-1 ring-slate-200">
+            
+          </a>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <a href="/accounts/@admin/" class="truncate font-semibold text-slate-800 hover:underline">admin</a>
+              <span class="text-sm text-slate-500">4 週, 1 日 前</span>
+              <span class="text-sm text-slate-500">· 正餐</span>
+              
+            </div>
+            
+              <div class="mt-1 flex flex-wrap gap-2">
+                
+                  <a
+                    href="/?tag=36"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#小資平價</a>
+                
+                  <a
+                    href="/?tag=37"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#約會聚餐</a>
+                
+                  <a
+                    href="/?tag=43"
+                    class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-sky-100 hover:text-sky-700"
+                  >#要排隊</a>
+                
+              </div>
+            
+          </div>
+
+          <div class="shrink-0 flex items-center gap-2">
+            <a href="/2/" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">查看</a>
+            
+          </div>
+        </div>
+
+        
+          <h2 class="mb-2 break-words text-base font-semibold sm:text-lg">小高拉麵</h2>
+        
+
+        <div class="post-body mb-2 max-w-full overflow-x-auto break-words leading-relaxed [&_img]:mx-auto [&_img]:my-2 [&_img]:block [&_img]:h-auto [&_img]:max-h-[500px] [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain [&_p]:mb-2 [&_table]:max-w-full [&_table]:text-sm [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+          <p>這家真的好吃，<strong>推！</strong>🍜</p>
+        </div>
+
+        
+          <div class="post-gallery-wrap mb-2">
+            <div class="apple-carousel is-single" data-apple-carousel>
+              <div class="apple-carousel-track" data-carousel-track>
+                
+                  <div class="apple-carousel-slide">
+                    <img src="/media/posts/54073430421_3e3c489e6c_b.jpg" alt="" class="post-cover-image">
+                  </div>
+                
+              </div>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-left" data-carousel-prev aria-label="上一張">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="apple-carousel-arrow apple-carousel-arrow-right" data-carousel-next aria-label="下一張">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+              <div class="apple-carousel-dots" data-carousel-dots>
+                
+                  <button
+                    type="button"
+                    class="apple-carousel-dot is-active"
+                    data-carousel-dot
+                    data-index="0"
+                    aria-label="切換到第 1 張"
+                  ></button>
+                
+              </div>
+            </div>
+            
+  
+    <div class="health-badge rank-C" data-health-badge>
+      <span class="health-badge-score rank-C">C</span>
+      <p class="health-badge-kcal">650 kcal</p>
+      <p class="health-badge-meta">健康 C</p>
+      <p class="health-badge-reason">拉麵熱量高，油脂與鈉含量較多。</p>
+    </div>
+  
+
+
+          </div>
+        
+
+        
+          <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+              <span>1 讚</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-message" aria-hidden="true"></i>
+              <span>2 留言</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+              <span>1 收藏</span>
+            </span>
+          </div>
+        
+
+        
+      </article>
+    
+  </div>
+
+  
+</div>
+
+<button
+  id="feed-new-posts-btn"
+  type="button"
+  class="fixed bottom-5 left-1/2 z-40 hidden -translate-x-1/2 rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-lg ring-2 ring-white/80 transition hover:bg-sky-500 sm:bottom-7"
+>
+  回到最上方
+</button>
+
+  </main>
+  <script>
+    function postInteractBlock(isLikedInit, likeCountInit, isCollectedInit, collectionCountInit) {
+      return {
+        isLiked: !!isLikedInit,
+        count: Number(likeCountInit) || 0,
+        isCollected: !!isCollectedInit,
+        collectionCount: Number(collectionCountInit) || 0,
+        showMsg: false,
+        msgText: "",
+        hideTimer: null,
+        submittingLike: false,
+        submittingCollect: false,
+        bumpMsg(text) {
+          this.msgText = text;
+          this.showMsg = true;
+          if (this.hideTimer) clearTimeout(this.hideTimer);
+          this.hideTimer = setTimeout(() => {
+            this.showMsg = false;
+          }, 2000);
+        },
+        async submitLike(event) {
+          event.preventDefault();
+          if (this.submittingLike) return;
+          this.submittingLike = true;
+          const form = event.currentTarget;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            if (!response.ok) throw new Error("bad");
+            const data = await response.json();
+            this.isLiked = !!data.is_liked;
+            this.count = Number(data.like_count) || 0;
+            this.bumpMsg(this.isLiked ? "已按讚" : "已取消按讚");
+          } catch (e) {
+            this.bumpMsg("操作失敗，請稍後再試");
+          } finally {
+            this.submittingLike = false;
+          }
+        },
+        async submitCollect(event) {
+          event.preventDefault();
+          if (this.submittingCollect) return;
+          this.submittingCollect = true;
+          const form = event.currentTarget;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            if (!response.ok) throw new Error("bad");
+            const data = await response.json();
+            this.isCollected = !!data.is_collected;
+            this.collectionCount = Number(data.collection_count) || 0;
+            this.bumpMsg(this.isCollected ? "已收藏" : "已取消收藏");
+          } catch (e) {
+            this.bumpMsg("操作失敗，請稍後再試");
+          } finally {
+            this.submittingCollect = false;
+          }
+        },
+      };
+    }
+
+    function commentLikeBlock(isLikedInit, countInit) {
+      return {
+        isLiked: !!isLikedInit,
+        count: Number(countInit) || 0,
+        showMsg: false,
+        msgText: "",
+        hideTimer: null,
+        submitting: false,
+        bumpMsg(text) {
+          this.msgText = text;
+          this.showMsg = true;
+          if (this.hideTimer) clearTimeout(this.hideTimer);
+          this.hideTimer = setTimeout(() => {
+            this.showMsg = false;
+          }, 2000);
+        },
+        async submitCommentLike(event) {
+          event.preventDefault();
+          if (this.submitting) return;
+          this.submitting = true;
+          const form = event.currentTarget;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            if (!response.ok) throw new Error("bad");
+            const data = await response.json();
+            this.isLiked = !!data.is_liked;
+            this.count = Number(data.like_count) || 0;
+            this.bumpMsg(this.isLiked ? "已按讚" : "已取消按讚");
+          } catch (e) {
+            this.bumpMsg("操作失敗，請稍後再試");
+          } finally {
+            this.submitting = false;
+          }
+        },
+      };
+    }
+
+    function initCommentCreateForms() {
+      function getDirectReplyToggle(commentEl) {
+        if (!commentEl) return null;
+        for (const child of Array.from(commentEl.children || [])) {
+          if (child && child.dataset && child.dataset.replyToggle !== undefined) {
+            return child;
+          }
+        }
+        return null;
+      }
+
+      function getAlpineState(el) {
+        if (!el) return null;
+        if (el.__x && el.__x.$data) return el.__x.$data;
+        if (Array.isArray(el._x_dataStack) && el._x_dataStack.length) {
+          return el._x_dataStack[0] || null;
+        }
+        return null;
+      }
+
+      function openAndBumpReplyCounts(commentEl) {
+        let cursor = commentEl;
+        while (cursor) {
+          const toggle = getDirectReplyToggle(cursor);
+          const state = getAlpineState(toggle);
+          if (state) {
+            state.replyCount = Number(state.replyCount || 0) + 1;
+            state.showReplies = true;
+          }
+          const parentChildrenBox = cursor.closest("[data-comment-children]");
+          if (!parentChildrenBox) break;
+          const parentId = parentChildrenBox.getAttribute("data-comment-children");
+          cursor = parentId ? document.querySelector(`[data-comment-id="${parentId}"]`) : null;
+        }
+      }
+
+      document.querySelectorAll(".js-comment-create-form").forEach((form) => {
+        if (form.dataset.ajaxBound === "1") return;
+        form.dataset.ajaxBound = "1";
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn && submitBtn.disabled) return;
+          if (submitBtn) submitBtn.disabled = true;
+          try {
+            const response = await fetch(form.action, {
+              method: "POST",
+              body: new FormData(form),
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+            });
+            let data = {};
+            try {
+              data = await response.json();
+            } catch (parseErr) {
+              data = {};
+            }
+            if (!response.ok || data.ok !== true) {
+              const err = data.error || "送出失敗";
+              let tip = form.querySelector(".js-comment-form-tip");
+              if (!tip) {
+                tip = document.createElement("p");
+                tip.className = "js-comment-form-tip mt-1 text-xs text-rose-600";
+                form.appendChild(tip);
+              }
+              tip.textContent = err;
+              setTimeout(() => {
+                tip.textContent = "";
+              }, 3000);
+              return;
+            }
+            const article = form.closest("[data-post-article]");
+            const list = article ? article.querySelector("[data-post-comments-list]") : null;
+            const countEl = article ? article.querySelector("[data-post-comment-count]") : null;
+
+            const tmp = document.createElement("div");
+            tmp.innerHTML = data.html;
+            const fragment = tmp.firstElementChild;
+            if (!fragment) return;
+
+            if (data.parent_id) {
+              const parentEl = article && article.querySelector(`[data-comment-id="${data.parent_id}"]`);
+              if (parentEl) {
+                const childrenBox = parentEl.querySelector(`[data-comment-children="${data.parent_id}"]`);
+                if (childrenBox) {
+                  childrenBox.classList.remove("hidden");
+                  childrenBox.appendChild(fragment);
+                  openAndBumpReplyCounts(parentEl);
+                  if (window.Alpine && typeof window.Alpine.initTree === "function") {
+                    window.Alpine.initTree(fragment);
+                  }
+                  initCommentCreateForms();
+                }
+              }
+            } else if (list) {
+              const emptyPh = list.querySelector("[data-comments-empty-placeholder]");
+              if (emptyPh) emptyPh.remove();
+              list.appendChild(fragment);
+              if (window.Alpine && typeof window.Alpine.initTree === "function") {
+                window.Alpine.initTree(fragment);
+              }
+              initCommentCreateForms();
+            }
+
+            if (countEl && typeof data.comment_count === "number") {
+              const countValueEl = countEl.querySelector("[data-post-comment-count-value]");
+              if (countValueEl) {
+                countValueEl.textContent = `${data.comment_count} 留言`;
+              } else {
+                countEl.textContent = `${data.comment_count} 留言`;
+              }
+            }
+            form.reset();
+            const okTip = form.querySelector(".js-comment-form-tip");
+            if (okTip) okTip.textContent = "";
+            const replyFormWrap = form.closest("[data-reply-form-wrap]");
+            const replyFormState = getAlpineState(replyFormWrap);
+            if (replyFormState && "showReplyForm" in replyFormState) {
+              replyFormState.showReplyForm = false;
+            }
+          } catch (e) {
+            form.submit();
+          } finally {
+            if (submitBtn) submitBtn.disabled = false;
+          }
+        });
+      });
+    }
+
+    function initPostImageGalleries() {
+      document.querySelectorAll("article[data-post-article]").forEach((article) => {
+        if (article.dataset.galleryReady === "1") return;
+        const postBody = article.querySelector(".post-body");
+        if (!postBody) return;
+
+        const bodyImages = Array.from(postBody.querySelectorAll("img"));
+        const coverImages = Array.from(article.querySelectorAll(".post-cover-image"));
+        const allImages = [...bodyImages, ...coverImages].filter(
+          (img, idx, arr) => img && !img.closest(".image-gallery") && arr.indexOf(img) === idx
+        );
+        if (!allImages.length) return;
+
+        const gallery = document.createElement("div");
+        gallery.className = "image-gallery mt-3 flex w-full gap-3 overflow-x-auto snap-x snap-mandatory pb-2";
+
+        allImages.forEach((img) => {
+          const oldParent = img.parentElement;
+          img.className =
+            "mx-auto max-h-[300px] w-auto max-w-full rounded-lg object-contain bg-slate-50";
+          const slide = document.createElement("div");
+          slide.className = "flex min-w-full shrink-0 snap-center items-center justify-center";
+          slide.appendChild(img);
+          gallery.appendChild(slide);
+          if (
+            oldParent &&
+            oldParent.tagName === "P" &&
+            oldParent.querySelectorAll("img").length === 0 &&
+            !oldParent.textContent.trim()
+          ) {
+            oldParent.remove();
+          }
+        });
+
+        article.querySelectorAll(".post-cover-image").forEach((img) => {
+          const wrap = img.parentElement;
+          if (
+            wrap &&
+            wrap !== gallery &&
+            (wrap.tagName === "DIV" || wrap.tagName === "P") &&
+            wrap.querySelectorAll("img").length === 0 &&
+            !wrap.textContent.trim()
+          ) {
+            wrap.remove();
+          }
+        });
+
+        postBody.insertAdjacentElement("afterend", gallery);
+        article.dataset.galleryReady = "1";
+      });
+    }
+
+    function initAppleHoverEffects() {
+      const cardSelectors = [
+        "[data-post-article]",
+        ".post-compose-details",
+        "#feed-top-snap",
+      ];
+      const buttonSelectors = [
+        "main button",
+        "main input[type='submit']",
+        "main a.rounded-lg",
+        "main a.rounded-xl",
+        "#feed-new-posts-btn",
+      ];
+      document.querySelectorAll(cardSelectors.join(",")).forEach((el) => {
+        el.classList.add("apple-hover-card");
+      });
+      document.querySelectorAll(buttonSelectors.join(",")).forEach((el) => {
+        if (el.classList.contains("rounded-full")) return;
+        el.classList.add("apple-hover-btn");
+      });
+    }
+
+    function initScrollReveal() {
+      const items = Array.from(document.querySelectorAll("[data-scroll-reveal]"));
+      if (!items.length) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        items.forEach((el) => el.classList.add("scroll-revealed"));
+        return;
+      }
+      if (!("IntersectionObserver" in window)) {
+        items.forEach((el) => el.classList.add("scroll-revealed"));
+        return;
+      }
+
+      items.forEach((el, index) => {
+        el.classList.add("scroll-reveal-item");
+        el.style.transitionDelay = `${Math.min(index * 40, 220)}ms`;
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("scroll-revealed");
+            observer.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.14,
+          rootMargin: "0px 0px -6% 0px",
+        }
+      );
+      items.forEach((el) => observer.observe(el));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initCommentCreateForms();
+      initPostImageGalleries();
+      initAppleHoverEffects();
+      initScrollReveal();
+    });
+  </script>
+  
+<div
+  id="page-submit-loading"
+  class="fixed inset-0 z-[90] hidden flex items-center justify-center bg-slate-900/45 backdrop-blur-[1px]"
+  aria-hidden="true"
+  aria-busy="false"
+  role="status"
+  aria-live="polite"
+>
+  <div class="mx-4 flex max-w-sm flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-2xl">
+    <span class="sr-only" id="page-submit-loading-label">載入中，請稍候</span>
+    <div class="food-ai-loader-bubble min-w-[156px] rounded-2xl border border-slate-200 px-4 py-3">
+      <div class="food-ai-loading-root" role="presentation">
+        <div class="food-ai-loading-scalebox">
+          <div class="divider" aria-hidden="true"></div>
+          <p class="loading-text" aria-hidden="true">
+            <span class="letter">L</span>
+            <span class="letter">o</span>
+            <span class="letter">a</span>
+            <span class="letter">d</span>
+            <span class="letter">i</span>
+            <span class="letter">n</span>
+            <span class="letter">g</span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <p class="text-sm font-medium text-slate-600">載入中…</p>
+  </div>
+</div>
+<script>
+  (function () {
+    var overlay = document.getElementById("page-submit-loading");
+    if (!overlay) return;
+    function hideOverlay() {
+      overlay.classList.add("hidden");
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.setAttribute("aria-busy", "false");
+    }
+    function showOverlay() {
+      overlay.classList.remove("hidden");
+      overlay.setAttribute("aria-hidden", "false");
+      overlay.setAttribute("aria-busy", "true");
+    }
+    window.addEventListener("pageshow", hideOverlay);
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("form[data-show-loading-on-submit]").forEach(function (form) {
+        form.addEventListener("submit", function () {
+          if (form.getAttribute("data-loading-skip") === "1") return;
+          showOverlay();
+        });
+      });
+    });
+  })();
+</script>
+
+  
+<script src="/static/js/apple_carousel.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const newPostsBtn = document.getElementById("feed-new-posts-btn");
+    const firstArticle = document.querySelector("[data-post-article][data-post-id]");
+    const firstPostId = firstArticle ? Number(firstArticle.getAttribute("data-post-id") || 0) : 0;
+    const currentUrl = new URL(window.location.href);
+    const currentPage = currentUrl.searchParams.get("page");
+    const onFirstPage = !currentPage || currentPage === "1";
+    let hasNewPosts = false;
+
+    function syncNewPostsBtn() {
+      if (!newPostsBtn) return;
+      const show = window.scrollY > 180;
+      newPostsBtn.classList.toggle("hidden", !show);
+      newPostsBtn.classList.toggle("animate-bounce", hasNewPosts);
+      newPostsBtn.textContent = hasNewPosts ? "有新貼文，回到上方查看" : "回到最上方";
+    }
+
+    async function checkNewPosts() {
+      if (!onFirstPage || !firstPostId) return;
+      try {
+        const checkUrl = new URL(window.location.href);
+        checkUrl.searchParams.set("page", "1");
+        checkUrl.searchParams.set("_poll", String(Date.now()));
+        const response = await fetch(checkUrl.toString(), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const incomingFirst = doc.querySelector("[data-post-article][data-post-id]");
+        if (!incomingFirst) return;
+        const incomingId = Number(incomingFirst.getAttribute("data-post-id") || 0);
+        if (incomingId > firstPostId) {
+          hasNewPosts = true;
+          syncNewPostsBtn();
+        }
+      } catch (_e) {
+        // ignore polling errors
+      }
+    }
+
+    if (newPostsBtn) {
+      function endFeedBackToTopSnap() {
+        document.documentElement.classList.remove("feed-back-to-top-snap");
+      }
+
+      newPostsBtn.addEventListener("click", () => {
+        document.documentElement.classList.add("feed-back-to-top-snap");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if ("onscrollend" in window) {
+          window.addEventListener(
+            "scrollend",
+            () => {
+              endFeedBackToTopSnap();
+            },
+            { once: true }
+          );
+        } else {
+          window.setTimeout(endFeedBackToTopSnap, 700);
+        }
+        if (hasNewPosts) {
+          window.setTimeout(() => {
+            window.location.reload();
+          }, 450);
+        }
+      });
+      window.addEventListener("scroll", syncNewPostsBtn, { passive: true });
+      syncNewPostsBtn();
+    }
+
+    if (onFirstPage && firstPostId) {
+      window.setInterval(checkNewPosts, 30000);
+    }
+
+    const categorySelect = document.getElementById("feed-category");
+    const selectedCategoriesBox = document.getElementById("feed-selected-categories-box");
+    const selectedCategoriesList = document.getElementById("feed-selected-categories-list");
+    const tagSelect = document.getElementById("feed-tag");
+    const selectedTagsBox = document.getElementById("feed-selected-tags-box");
+    const selectedTagsList = document.getElementById("feed-selected-tags-list");
+    if (
+      categorySelect &&
+      selectedCategoriesBox &&
+      selectedCategoriesList &&
+      tagSelect &&
+      selectedTagsBox &&
+      selectedTagsList
+    ) {
+      function renderSelectedChips(selectEl, boxEl, listEl, chipClass) {
+        const selectedOptions = Array.from(selectEl.selectedOptions || []);
+        listEl.innerHTML = "";
+        if (!selectedOptions.length) {
+          boxEl.classList.add("hidden");
+          return;
+        }
+        boxEl.classList.remove("hidden");
+        selectedOptions.forEach((opt) => {
+          const chip = document.createElement("span");
+          chip.className = chipClass;
+          chip.textContent = opt.textContent.trim();
+          listEl.appendChild(chip);
+        });
+      }
+
+      function renderSelectedFiltersNow() {
+        renderSelectedChips(
+          categorySelect,
+          selectedCategoriesBox,
+          selectedCategoriesList,
+          "rounded-full bg-white px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
+        );
+        renderSelectedChips(
+          tagSelect,
+          selectedTagsBox,
+          selectedTagsList,
+          "rounded-full bg-white px-2.5 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
+        );
+      }
+
+      categorySelect.addEventListener("change", renderSelectedFiltersNow);
+      categorySelect.addEventListener("click", renderSelectedFiltersNow);
+      categorySelect.addEventListener("keyup", renderSelectedFiltersNow);
+      tagSelect.addEventListener("change", renderSelectedFiltersNow);
+      tagSelect.addEventListener("click", renderSelectedFiltersNow);
+      tagSelect.addEventListener("keyup", renderSelectedFiltersNow);
+      renderSelectedFiltersNow();
+    }
+
+    const healthModeToggle = document.getElementById("health-mode-toggle");
+    const healthCards = document.querySelectorAll("[data-post-article]");
+    const storageKey = "feed-health-mode-enabled";
+    let isHealthMode = window.localStorage.getItem(storageKey) === "1";
+
+    function paintHealthMode() {
+      if (!healthModeToggle) return;
+      healthModeToggle.classList.toggle("health-mode-enabled", isHealthMode);
+      healthModeToggle.setAttribute("aria-pressed", isHealthMode ? "true" : "false");
+      healthCards.forEach((card) => {
+        card.classList.toggle("health-mode-on", isHealthMode);
+      });
+    }
+
+    if (healthModeToggle) {
+      healthModeToggle.addEventListener("click", () => {
+        isHealthMode = !isHealthMode;
+        window.localStorage.setItem(storageKey, isHealthMode ? "1" : "0");
+        paintHealthMode();
+      });
+      paintHealthMode();
+    }
+
+    if (window.initAppleCarousels) {
+      window.initAppleCarousels();
+      window.addEventListener("load", window.initAppleCarousels);
+    }
+  });
+</script>
+
+</body>
+</html>

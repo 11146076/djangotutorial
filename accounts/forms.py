@@ -7,26 +7,37 @@ from django.contrib.auth.forms import (
     UsernameField,
 )
 
+from .forms_security import AuthSecurityFieldsMixin
 from .models import Profile
+
+_SAAS_INPUT_CLASS = "saas-input min-h-11 w-full border px-3 py-2 text-base sm:text-sm"
 
 User = get_user_model()
 
 
-class RegisterForm(UserCreationForm):
+class RegisterForm(AuthSecurityFieldsMixin, UserCreationForm):
     email = forms.EmailField(required=True)
 
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ("username", "email", "password1", "password2"):
+            self.fields[name].widget.attrs.setdefault("class", _SAAS_INPUT_CLASS)
+        self.fields["captcha"].widget.attrs.setdefault(
+            "class", "saas-input min-h-11 w-36 border px-3 py-2 text-base sm:text-sm"
+        )
+
     def clean_email(self):
         email = (self.cleaned_data.get("email") or "").strip().lower()
         if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("This email is already registered.")
+            raise forms.ValidationError("此 Email 已被註冊。")
         return email
 
 
-class UsernameOrEmailAuthenticationForm(AuthenticationForm):
+class UsernameOrEmailAuthenticationForm(AuthSecurityFieldsMixin, AuthenticationForm):
     """
     必須使用 Django 的 UsernameField（NFKC Unicode 正規化），與註冊表單一致；
     若用一般 CharField，部分帳號會永遠無法登入。
@@ -35,9 +46,20 @@ class UsernameOrEmailAuthenticationForm(AuthenticationForm):
     username = UsernameField(
         label="帳號或 Email",
         widget=forms.TextInput(
-            attrs={"autofocus": True, "autocomplete": "username"},
+            attrs={
+                "autofocus": True,
+                "autocomplete": "username",
+                "class": _SAAS_INPUT_CLASS,
+            },
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["password"].widget.attrs.setdefault("class", _SAAS_INPUT_CLASS)
+        self.fields["captcha"].widget.attrs.setdefault(
+            "class", "saas-input min-h-11 w-36 border px-3 py-2 text-base sm:text-sm"
+        )
 
     error_messages = {
         "invalid_login": "帳號/Email 或密碼錯誤，請再試一次。",

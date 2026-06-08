@@ -1,177 +1,122 @@
 ﻿# 🍴 等等吃啥（EatWhat）
 
-這是一個「美食分享＋選擇困難救星」的小平台。大家可以發文、看文、用標籤/分類找靈感，還能按讚、留言、收藏。
+美食社群平台：發文、看文、用分類/標籤找靈感，並可按讚、留言、收藏、追蹤。  
+目前已加入 **健康達人模式**：可在貼文上顯示 AI 估算熱量、A-D 健康等級與一句話短評。
 
 ---
 
-## 使用者故事（User Story）
+## 主要功能
 
-> 身為一個面對三餐要吃啥，每次都選擇困難的使用者，我希望可以用「分類/標籤」去找貼文，參考別人的美食分享，讓我更快決定要吃什麼。
-
----
-
-## 核心願景
-
-- **現在要做的事**：幫大家解決「午餐/晚餐不知道吃什麼」。
-- **未來可以做的事**：如果之後發現大家常吃高熱量外食，可以再加上「熱量分析」或「健康標籤」等功能，讓吃飯更健康。
-
----
-
-## 系統需求（System Requirements）
-
-### 功能性需求（Functional Requirements）
-
-| 模組 | 用到的功能 | 狀態 |
-| :--- | :--- | :---: |
-| 會員管理 | 註冊、登入/登出、個人資料與頭像 | ✅ 已完成 |
-| 社群貼文 | 發文（含圖片）、看貼文、按讚、留言 | ✅ 已完成 |
-| 搜尋篩選 | 關鍵字搜尋、分類/標籤篩選 | ✅ 已完成（可再優化） |
-| 互動追蹤 | 收藏貼文、追蹤會員 | ✅ 已完成 |
-| 後台管理 | 管理員可管理使用者/貼文/留言/分類/標籤 | ✅ 已完成 |
-
-### 非功能性需求（Non-functional Requirements）
-
-- **資料庫**：MariaDB（關聯式資料庫）
-- **安全**：Django 密碼雜湊、CSRF 防護
-- **效能**：列表查詢使用 `select_related()` / `prefetch_related()` 等方式減少查詢次數
-- **防呆**：搜尋字數、留言長度、重複寫入搜尋紀錄等都有基本處理
+| 模組 | 說明 | 狀態 |
+| --- | --- | :---: |
+| 會員 | 註冊、登入/登出、個人檔案（頭像、簡介、飲食偏好） | 已完成 |
+| 貼文 | 富文字發文、最多 3 張圖、公開/私密、動態牆、單篇瀏覽 | 已完成 |
+| 互動 | 按讚、留言/回覆、留言按讚、收藏、追蹤 | 已完成 |
+| 搜尋篩選 | 關鍵字、分類多選、標籤多選、搜尋紀錄 | 已完成 |
+| AI 助理 | 美食對話助手（文字/圖片） | 已完成 |
+| 健康達人 | AI 健康分析 + 卡片/詳情頁對話框顯示 | 已完成 |
+| 後台管理 | 會員/貼文/留言/分類/標籤、CSV 匯出、重算讚數 | 已完成 |
 
 ---
 
-## 💻 技術棧（Tech Stack）
+## 健康達人模式（本次重點）
 
-- **Backend**：Django 5.x（Python）
-- **Database**：MariaDB 10.x
-- **Frontend**：HTML + Tailwind CSS + Django Template（搭配 Django Form/Widget）
-- **DevOps**：Git、HeidiSQL
+- 發文後由背景任務觸發 AI 分析（非同步，避免發文等待）
+- 儲存於 `post_health_insights`（關聯表）
+- `posts.latest_health_insight` 作為前端快速讀取入口
+- 前端可一鍵切換健康模式，顯示 AI 對話氣泡
+
+### 分析欄位
+
+- `calories`：熱量估算（kcal）
+- `health_rank`：健康等級（A/B/C/D）
+- `reason`：一句話短評
+- `status`：`pending` / `completed` / `failed`
 
 ---
 
-## ERD / DBML（資料表設計）
+## 技術棧
 
-DBML：
+- **後端**：Django 5.x（Python）
+- **資料庫**：MariaDB
+- **快取/任務佇列**：Redis + Celery
+- **畫面**：Django Template + Tailwind + Alpine.js（部分互動）
+- **編輯器**：django-ckeditor
+- **後台匯出**：django-import-export
 
-```text
-Table users {
-  id integer [primary key]
-  username varchar [unique]
-  password varchar
-  email varchar [unique]
-  role varchar [default: 'member']
-  created_at timestamp
-}
+---
 
-Table profiles {
-  user_id integer [primary key, unique]
-  avatar varchar
-  bio text
-  dietary_preference varchar
-}
+## 本機開發
 
-Table categories {
-  id integer [primary key]
-  name varchar
-}
-
-Table tags {
-  id integer [primary key]
-  name varchar [unique]
-}
-
-Table search_logs {
-  id integer [primary key]
-  user_id integer
-  keyword varchar
-  created_at timestamp
-}
-
-Table posts {
-  id integer [primary key]
-  user_id integer
-  category_id integer
-  title varchar
-  content text
-  image_url varchar
-  like_count integer [default: 0]
-  created_at timestamp
-  updated_at timestamp
-}
-
-Table likes {
-  id integer [primary key]
-  post_id integer
-  user_id integer
-  created_at timestamp
-}
-
-Table comments {
-  id integer [primary key]
-  post_id integer
-  user_id integer
-  content text
-  created_at timestamp
-}
-
-Table follows {
-  id integer [primary key]
-  follower_id integer
-  following_id integer
-  created_at timestamp
-}
-
-Table collections {
-  id integer [primary key]
-  user_id integer
-  post_id integer
-  created_at timestamp
-}
-
-Ref: profiles.user_id - users.id
-Ref: posts.user_id > users.id
-Ref: posts.category_id > categories.id
-Ref: search_logs.user_id > users.id
-Ref: comments.post_id > posts.id
-Ref: comments.user_id > users.id
-Ref: likes.post_id > posts.id
-Ref: likes.user_id > users.id
-Ref: follows.follower_id > users.id
-Ref: follows.following_id > users.id
-Ref: collections.user_id > users.id
-Ref: collections.post_id > posts.id
-```
-
-## 🚀 開發人員同步指南
-
-### 1. 安裝套件
+### 1) 安裝套件
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-### 2. 建立 MariaDB 資料庫
+### 2) 設定資料庫與環境變數
 
-- Database Name：`eat_what`
-- Collation：`utf8mb4_unicode_ci`
+- 建立 DB：`eat_what`
+- `.env` 至少需包含 DB 連線資訊、AI key（若要啟用 AI）
+- Celery/Redis 可用預設值：
+  - `CELERY_BROKER_URL=redis://127.0.0.1:6379/0`
+  - `CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1`
 
-### 3. 設定資料庫連線
-
-到 `mysite/settings.py` 修改 `DATABASES`（改成自己的帳密與 port）。
-
-### 4. 建表
+### 3) 套用 migration
 
 ```powershell
 python manage.py migrate
 ```
 
-### 5. 建superuser
+### 4) 建立管理員（可選）
 
 ```powershell
 python manage.py createsuperuser
 ```
 
-### 6. 啟動
+### 5) 啟動服務
 
+**終端 A（Celery）**
+```powershell
+celery -A mysite worker -l info -P solo
+```
+
+
+**終端 B（Django）**
 ```powershell
 python manage.py runserver
 ```
 
+---
+
+## 舊貼文健康分析回填
+
+已提供管理指令可一次補跑歷史貼文：
+
+```powershell
+python manage.py backfill_health_insights
+```
+
+- 預設：丟進 Celery 非同步處理
+- 若要同步執行：
+
+```powershell
+python manage.py backfill_health_insights --sync
+```
+
+---
+
+## 報告圖檔
+
+已整理可直接貼報告的 Mermaid 圖：
+
+- `docs/report_diagrams.md`
+  - 用例圖（Use Case）
+  - ERD（含健康達人資料表）
+
+---
+
+## 安全與注意事項
+
+- `.env`、API key、資料庫密碼請勿提交到 Git。
+- 本專案使用 `django-ckeditor`（CKEditor 4），若上線建議評估升級方案。

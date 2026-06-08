@@ -10,3 +10,10 @@ if os.environ.get("USE_MYSQL", "").strip().lower() in ("1", "true", "yes"):
     import MySQLdb
 
     MySQLdb.version_info = (2, 2, 1, "final", 0)
+
+try:
+    from .celery import app as celery_app
+except Exception:  # pragma: no cover
+    celery_app = None
+
+__all__ = ("celery_app",)

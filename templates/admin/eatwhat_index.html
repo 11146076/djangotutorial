@@ -1,0 +1,90 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .ew-dash {
+    margin-bottom: 1.75rem;
+  }
+  .ew-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+    gap: 0.875rem;
+  }
+  .ew-dash-card {
+    background: var(--body-bg);
+    border: 1px solid var(--hairline-color);
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+  }
+  .ew-dash-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--body-quiet-color);
+  }
+  .ew-dash-card p {
+    margin: 0;
+    font-size: 1.625rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--body-fg);
+  }
+  .ew-dash-card span {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--body-quiet-color);
+  }
+  .ew-dash-note {
+    margin: 0 0 1rem;
+    color: var(--body-quiet-color);
+    font-size: 0.8125rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if dashboard %}
+  <section class="ew-dash" aria-label="{% trans '概況統計' %}">
+    <p class="ew-dash-note">{% trans "快速掌握社群與 AI 功能使用狀況。" %}</p>
+    <div class="ew-dash-grid">
+      <div class="ew-dash-card">
+        <h3>{% trans "使用者" %}</h3>
+        <p>{{ dashboard.users }}</p>
+      </div>
+      <div class="ew-dash-card">
+        <h3>{% trans "貼文" %}</h3>
+        <p>{{ dashboard.posts }}</p>
+        <span>{% trans "公開" %} {{ dashboard.posts_public }} · {% trans "私密" %} {{ dashboard.posts_private }}</span>
+      </div>
+      <div class="ew-dash-card">
+        <h3>{% trans "留言" %}</h3>
+        <p>{{ dashboard.comments }}</p>
+      </div>
+      <div class="ew-dash-card">
+        <h3>{% trans "健康分析待處理" %}</h3>
+        <p>{{ dashboard.health_pending }}</p>
+        {% if dashboard.health_failed %}
+        <span>{% trans "失敗" %} {{ dashboard.health_failed }}</span>
+        {% endif %}
+      </div>
+      <div class="ew-dash-card">
+        <h3>{% trans "今日 AI 對話" %}</h3>
+        <p>{{ dashboard.ai_chats_today }}</p>
+      </div>
+      <div class="ew-dash-card">
+        <h3>{% trans "今日搜尋" %}</h3>
+        <p>{{ dashboard.searches_today }}</p>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}
