@@ -1,4 +1,3 @@
-{# 全頁送出載入（與 AI 助理相同的 Loading 動畫氣泡）；在表單上加 data-show-loading-on-submit 啟用 #}
 <div
   id="page-submit-loading"
   class="fixed inset-0 z-[90] hidden flex items-center justify-center bg-slate-900/45 backdrop-blur-[1px]"
@@ -32,23 +31,72 @@
   (function () {
     var overlay = document.getElementById("page-submit-loading");
     if (!overlay) return;
+
     function hideOverlay() {
       overlay.classList.add("hidden");
       overlay.setAttribute("aria-hidden", "true");
       overlay.setAttribute("aria-busy", "false");
     }
+
     function showOverlay() {
       overlay.classList.remove("hidden");
       overlay.setAttribute("aria-hidden", "false");
       overlay.setAttribute("aria-busy", "true");
     }
+
+    function shouldSkipLoading(el) {
+      return !!(el && el.closest("[data-loading-skip]"));
+    }
+
+    function shouldLinkShowLoading(link, event) {
+      if (!link || shouldSkipLoading(link)) return false;
+      if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)) return false;
+      if (link.target === "_blank" || link.hasAttribute("download")) return false;
+      var href = (link.getAttribute("href") || "").trim();
+      if (!href || href === "#" || href.indexOf("#") === 0 || href.indexOf("javascript:") === 0) {
+        return false;
+      }
+      return true;
+    }
+
+    window.showPageLoading = showOverlay;
+    window.hidePageLoading = hideOverlay;
+
     window.addEventListener("pageshow", hideOverlay);
+
     document.addEventListener("DOMContentLoaded", function () {
       document.querySelectorAll("form[data-show-loading-on-submit]").forEach(function (form) {
         form.addEventListener("submit", function () {
           if (form.getAttribute("data-loading-skip") === "1") return;
           showOverlay();
         });
+      });
+
+      document.querySelectorAll("a[data-show-loading-on-click]").forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          if (!shouldLinkShowLoading(link, event)) return;
+          showOverlay();
+        });
+      });
+
+      document.querySelectorAll("[data-show-loading-on-navigate]").forEach(function (root) {
+        root.addEventListener("click", function (event) {
+          var link = event.target.closest("a[href]");
+          if (!link || !root.contains(link)) return;
+          if (!shouldLinkShowLoading(link, event)) return;
+          showOverlay();
+        });
+
+        root.addEventListener(
+          "submit",
+          function (event) {
+            var form = event.target;
+            if (!form || form.tagName !== "FORM" || !root.contains(form)) return;
+            if (form.getAttribute("data-loading-skip") === "1") return;
+            showOverlay();
+          },
+          true
+        );
       });
     });
   })();

@@ -33,7 +33,7 @@
       },
     };
   </script>
-  <link rel="stylesheet" href="{% static 'css/saas-theme.css' %}?v=20260526">
+  <link rel="stylesheet" href="{% static 'css/saas-theme.css' %}?v=20260608a">
   <script src="{% static 'js/food_ai_assistant.js' %}"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <style>
@@ -276,9 +276,9 @@
           },
           wheelGradient() {
             const n = this.tags.length;
-            if (!n) return 'conic-gradient(from -90deg, #94a3b8 0deg 360deg)';
+            if (!n) return 'conic-gradient(from -90deg, #e2e8f0 0deg 360deg)';
             const seg = 360 / n;
-            const colors = ['#93ada7', '#a79f94', '#919db2', '#a891ab', '#9ca98f', '#92b3b8', '#aea392', '#88a7a2'];
+            const colors = ['#fde8d4', '#e8f4e1', '#dceef8', '#f0e4f5', '#f8f4dc', '#dff3f0', '#f5ebe0', '#e2eaf8'];
             const stops = this.tags.map((_, i) => `${colors[i % colors.length]} ${i * seg}deg ${(i + 1) * seg}deg`).join(', ');
             return `conic-gradient(from -90deg, ${stops})`;
           },
@@ -395,7 +395,7 @@
   <div x-data="eatWhatWheel()" @keydown.escape.window="open = false">
     <button
       type="button"
-      class="saas-fab fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-mint/50 sm:bottom-8 sm:right-8"
+      class="saas-fab fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full transition hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 sm:bottom-8 sm:right-8"
       aria-haspopup="dialog"
       :aria-expanded="open"
       aria-label="開啟標籤轉盤"
@@ -421,7 +421,7 @@
       <div class="absolute inset-0 bg-slate-900/50" @click="open = false; picked = null; result = ''" aria-hidden="true"></div>
       <div class="relative z-10 w-full max-w-md saas-card p-5 sm:p-6">
         <div class="mb-4 flex items-start justify-between gap-3">
-          <h2 id="wheel-dialog-title" class="text-xl font-bold text-brand-teal">隨機標籤轉轉</h2>
+          <h2 id="wheel-dialog-title" class="text-xl font-bold text-slate-900">隨機標籤轉轉</h2>
           <button
             type="button"
             class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
@@ -434,7 +434,7 @@
 
         <div class="mx-auto flex w-full max-w-[320px] items-center justify-center gap-1 sm:gap-2">
           <div class="pointer-events-none shrink-0 self-center" aria-hidden="true">
-            <div class="h-0 w-0 border-y-[12px] border-y-transparent border-l-[18px] border-l-rose-600 drop-shadow"></div>
+            <div class="h-0 w-0 border-y-[12px] border-y-transparent border-l-[18px] border-l-slate-800 drop-shadow-sm"></div>
           </div>
           <div class="relative min-w-0 flex-1 max-w-[280px]">
           <div class="rounded-full p-1.5 shadow-inner ring-4 ring-slate-100">
@@ -446,7 +446,7 @@
                 <div class="absolute inset-0 rounded-full" :style="{ background: wheelGradient() }"></div>
                 <template x-for="(t, i) in tags" :key="t.id">
                   <span
-                    class="pointer-events-none absolute left-1/2 top-1/2 w-[5.5rem] text-center text-[11px] font-bold leading-tight text-white drop-shadow [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] sm:w-24 sm:text-sm"
+                    class="pointer-events-none absolute left-1/2 top-1/2 w-[5.5rem] text-center text-[11px] font-semibold leading-tight text-slate-900 sm:w-24 sm:text-sm"
                     :style="`transform: translate(-50%, -50%) rotate(${i * (360 / tags.length) + (360 / tags.length) / 2 - 90}deg) translateY(-100px)`"
                     x-text="t.name"
                   ></span>
@@ -463,13 +463,13 @@
         <p class="mt-4 min-h-[1.75rem] text-center text-sm text-slate-600" x-show="!tags.length">
           尚無已使用於貼文的標籤，發文時加上標籤後即可使用轉盤。
         </p>
-        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-brand-teal-soft sm:text-lg" x-show="tags.length && result" x-text="result"></p>
+        <p class="mt-4 min-h-[1.75rem] text-center text-base font-semibold text-slate-900 sm:text-lg" x-show="tags.length && result" x-text="result"></p>
 
         <div class="mt-5 flex flex-col items-center gap-3" x-show="tags.length">
           <a
             x-show="picked && !spinning"
             x-cloak
-            class="saas-btn-primary min-h-11 w-full max-w-xs px-6 py-3 text-center text-base"
+            class="saas-wheel-btn-outline min-h-11 w-full max-w-xs px-6 py-3 text-center text-base"
             :href="picked ? browseTagUrl(picked) : '#'"
             :aria-label="picked ? '查看「' + picked.name + '」標籤的貼文列表' : '查看標籤貼文列表'"
           >
@@ -477,11 +477,11 @@
           </a>
           <button
             type="button"
-            class="saas-btn-dark px-8 py-3 text-base disabled:cursor-not-allowed disabled:opacity-60"
+            class="saas-btn-primary px-8 py-3 text-base"
             :disabled="spinning || !tags.length"
             @click="spin()"
           >
-            <span x-show="!spinning">開始轉！</span>
+            <span x-show="!spinning ">開始轉！</span>
             <span x-show="spinning" x-cloak>轉動中…</span>
           </button>
         </div>

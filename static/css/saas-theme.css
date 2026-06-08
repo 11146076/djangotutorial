@@ -241,15 +241,65 @@ body.saas-theme .rounded-xl.bg-white.shadow {
   box-shadow: var(--brand-shadow);
 }
 
-/* FAB */
+/* FAB（標籤轉盤）— 淡色底、深色圖示 */
 .saas-fab {
-  background: linear-gradient(135deg, #8db1a8, #739a91);
-  color: #fff;
-  box-shadow: 0 18px 44px -18px rgba(69, 108, 102, 0.48);
+  background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 55%, #e8eef4 100%);
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 14px 36px -14px rgba(15, 23, 42, 0.22);
 }
 
 .saas-fab:hover {
-  background: linear-gradient(135deg, #99bab2, #7ea79e);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 55%, #eef2f7 100%);
+  color: #020617;
+}
+
+/* 轉盤彈窗內按鈕 — 淺色底、黑字 */
+.saas-wheel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  transition: background 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.saas-wheel-btn:hover {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.22);
+  color: #020617;
+}
+
+.saas-wheel-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.saas-wheel-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  transition: background 0.2s ease;
+}
+
+.saas-wheel-btn-outline:hover {
+  background: #f8fafc;
+  color: #020617;
 }
 
 .saas-fab-accent {
