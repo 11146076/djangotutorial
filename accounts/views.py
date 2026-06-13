@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import login
 from django.contrib.auth import get_user_model
 from django.contrib.auth.views import (
@@ -16,11 +18,21 @@ from .models import Profile
 from posts.models import Follow, Post, PostComment
 
 User = get_user_model()
+logger = logging.getLogger("accounts")
 
 
 class LoginView(DjangoLoginView):
     template_name = "accounts/login.html"
     authentication_form = UsernameOrEmailAuthenticationForm
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        logger.info("User logged in: %s", self.request.user.username)
+        return response
+
+    def form_invalid(self, form):
+        logger.warning("Login failed for identity=%s", form.data.get("username", ""))
+        return super().form_invalid(form)
 
 
 class LogoutView(DjangoLogoutView):
@@ -36,6 +48,7 @@ def register(request):
             user = form.save()
             Profile.objects.get_or_create(user=user)
             login(request, user)
+            logger.info("User registered: %s", user.username)
             return redirect("posts:feed")
     else:
         form = RegisterForm()

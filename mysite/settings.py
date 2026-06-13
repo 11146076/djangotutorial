@@ -144,7 +144,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Logging（開發：console；正式：可改為檔案 handler）
+# Logging — 寫入 logs/ 目錄，協助維運與問題釐清
 _LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG" if DEBUG else "INFO").strip().upper()
 _LOG_DIR = BASE_DIR / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
@@ -154,6 +154,10 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
+            "format": "{levelname} {asctime} {name} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
             "format": "{levelname} {asctime} {name} {message}",
             "style": "{",
         },
@@ -161,6 +165,30 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "app_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": _LOG_DIR / "app.log",
+            "maxBytes": 5 * 1024 * 1024,
+            "backupCount": 5,
+            "encoding": "utf-8",
+            "formatter": "verbose",
+        },
+        "django_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": _LOG_DIR / "django.log",
+            "maxBytes": 5 * 1024 * 1024,
+            "backupCount": 5,
+            "encoding": "utf-8",
+            "formatter": "verbose",
+        },
+        "security_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": _LOG_DIR / "security.log",
+            "maxBytes": 2 * 1024 * 1024,
+            "backupCount": 5,
+            "encoding": "utf-8",
             "formatter": "verbose",
         },
         "ai_file": {
@@ -172,19 +200,43 @@ LOGGING = {
             "formatter": "verbose",
         },
     },
+    "root": {
+        "handlers": ["console", "app_file"],
+        "level": _LOG_LEVEL,
+    },
     "loggers": {
+        "django": {
+            "handlers": ["console", "django_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["django_file", "app_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["security_file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "accounts": {
+            "handlers": ["console", "app_file", "security_file"],
+            "level": _LOG_LEVEL,
+            "propagate": False,
+        },
+        "posts": {
+            "handlers": ["console", "app_file"],
+            "level": _LOG_LEVEL,
+            "propagate": False,
+        },
         "posts.ai_chat": {
             "handlers": ["console", "ai_file"],
             "level": _LOG_LEVEL,
             "propagate": False,
         },
-        "posts.views": {
-            "handlers": ["console"],
-            "level": _LOG_LEVEL,
-            "propagate": False,
-        },
         "posts.api": {
-            "handlers": ["console", "ai_file"],
+            "handlers": ["console", "ai_file", "app_file"],
             "level": _LOG_LEVEL,
             "propagate": False,
         },
