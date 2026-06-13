@@ -106,13 +106,19 @@ python manage.py backfill_health_insights --sync
 
 ---
 
-## 報告圖檔
+## 報告圖檔與文件
 
-已整理可直接貼報告的 Mermaid 圖：
-
-- `docs/report_diagrams.md`
-  - 用例圖（Use Case）
-  - ERD（含健康達人資料表）
+| 文件 | 說明 |
+|------|------|
+| [`docs/report_diagrams.md`](docs/report_diagrams.md) | 用例圖、ERD、部署圖、狀態圖、活動圖、類別圖 |
+| [`docs/url_reference.md`](docs/url_reference.md) | urlpatterns 與 views 對照表 |
+| [`docs/rest_api.md`](docs/rest_api.md) | REST 端點與資源規劃 |
+| [`docs/database.md`](docs/database.md) | MariaDB 設定 |
+| [`docs/logging.md`](docs/logging.md) | 後端日誌 |
+| [`docs/i18n.md`](docs/i18n.md) | 多國語言 |
+| [`docs/parallel_auth.md`](docs/parallel_auth.md) | 並存認證與角色授權 |
+| [`docs/jwt.md`](docs/jwt.md) | JWT 認證 |
+| [`deploy/README.md`](deploy/README.md) | Linux + Nginx + Gunicorn 部署 |
 
 ---
 
