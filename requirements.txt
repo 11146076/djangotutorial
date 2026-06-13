@@ -13,3 +13,4 @@ mysqlclient>=2.1
 celery>=5.4
 redis>=5.0
 gunicorn>=22.0,<24
+djangorestframework-simplejwt>=5.3,<6
