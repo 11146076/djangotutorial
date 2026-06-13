@@ -3,38 +3,54 @@
   <label class="mb-2 block text-sm font-medium text-slate-600">{{ form.captcha.label }}</label>
   <div class="auth-captcha flex flex-wrap items-center gap-3">
     {{ form.captcha }}
+    <button
+      type="button"
+      class="saas-btn-ghost shrink-0 px-3 py-2 text-sm"
+      data-captcha-refresh
+      aria-label="更換驗證碼"
+    >
+      <i class="fa-solid fa-rotate-right mr-1" aria-hidden="true"></i>Refresh CAPTCHA
+    </button>
   </div>
   {% if form.captcha.errors %}
     <p class="mt-1 text-sm text-rose-600">{{ form.captcha.errors.0 }}</p>
   {% endif %}
-  <p class="mt-1 text-xs text-slate-500">看不清可點圖片換一組</p>
+  <p class="mt-1 text-xs text-slate-500">看不清可點圖片或按 Refresh CAPTCHA 換一組</p>
 </div>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    async function refreshCaptcha(wrap) {
+      try {
+        const res = await fetch("{% url 'captcha-refresh' %}", {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          credentials: "same-origin",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const img = wrap.querySelector("img");
+        const keyInput = wrap.querySelector('input[name$="captcha_0"]');
+        const textInput = wrap.querySelector('input[name$="captcha_1"]');
+        if (keyInput && data.key) keyInput.value = data.key;
+        if (img && data.image_url) img.src = data.image_url;
+        if (textInput) {
+          textInput.value = "";
+          textInput.focus();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     document.querySelectorAll(".auth-captcha").forEach((wrap) => {
       const img = wrap.querySelector("img");
-      if (!img) return;
-      img.title = "點擊換一張驗證碼";
-      img.addEventListener("click", async () => {
-        try {
-          const res = await fetch("{% url 'captcha-refresh' %}", {
-            headers: { "X-Requested-With": "XMLHttpRequest" },
-            credentials: "same-origin",
-          });
-          if (!res.ok) return;
-          const data = await res.json();
-          const keyInput = wrap.querySelector('input[name$="captcha_0"]');
-          const textInput = wrap.querySelector('input[name$="captcha_1"]');
-          if (keyInput && data.key) keyInput.value = data.key;
-          if (data.image_url) img.src = data.image_url;
-          if (textInput) {
-            textInput.value = "";
-            textInput.focus();
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      });
+      if (img) {
+        img.title = "點擊換一張驗證碼";
+        img.addEventListener("click", () => refreshCaptcha(wrap));
+      }
+      const btn = wrap.querySelector("[data-captcha-refresh]");
+      if (btn) {
+        btn.addEventListener("click", () => refreshCaptcha(wrap));
+      }
     });
   });
 </script>
