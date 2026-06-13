@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}首頁 - 等等吃啥{% endblock %}
+{% block title %}{% trans "首頁" %} - {% trans "等等吃啥" %}{% endblock %}
 
 {% block extra_head %}
 {% if user.is_authenticated %}{{ form.media }}{% endif %}
@@ -96,22 +96,22 @@
   <section class="saas-card mb-4 overflow-hidden p-6 sm:p-8">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-wider text-brand-teal-soft">美食社群</p>
-        <h1 class="mt-1 text-2xl font-bold text-brand-teal sm:text-3xl">發現下一餐吃什麼</h1>
+        <p class="text-xs font-semibold uppercase tracking-wider text-brand-teal-soft">{% trans "美食社群" %}</p>
+        <h1 class="mt-1 text-2xl font-bold text-brand-teal sm:text-3xl">{% trans "發現下一餐吃什麼" %}</h1>
         <p class="mt-2 max-w-md text-sm leading-relaxed text-slate-600">
-          登入後即可瀏覽美食動態、發文、使用 AI 助理與健康達人分析。
+          {% trans "登入後即可瀏覽美食動態、發文、使用 AI 助理與健康達人分析。" %}
         </p>
       </div>
       <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
-        <a href="{% url 'accounts:register' %}" class="saas-btn-primary text-center">免費註冊</a>
-        <a href="{% url 'accounts:login' %}" class="saas-btn-ghost text-center">登入</a>
+        <a href="{% url 'accounts:register' %}" class="saas-btn-primary text-center">{% trans "免費註冊" %}</a>
+        <a href="{% url 'accounts:login' %}" class="saas-btn-ghost text-center">{% trans "登入" %}</a>
       </div>
     </div>
   </section>
   {% else %}
   <div id="feed-top-snap" class="saas-card mb-4 p-4 sm:p-5">
     <div class="mb-3 flex items-center justify-between gap-3">
-      <p class="saas-section-title">探索美食動態</p>
+      <p class="saas-section-title">{% trans "探索美食動態" %}</p>
       <button id="health-mode-toggle" type="button" class="health-mode-toggle" aria-pressed="false">
         <span class="health-mode-track"><span class="health-mode-thumb"></span></span>
         <span class="health-mode-label">健康達人</span>

@@ -1,0 +1,51 @@
+# English translations for EatWhat
+msgid ""
+msgstr ""
+"Project-Id-Version: EatWhat\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "首頁"
+msgstr "Home"
+
+msgid "我的收藏"
+msgstr "My Collections"
+
+msgid "登出"
+msgstr "Logout"
+
+msgid "登入"
+msgstr "Login"
+
+msgid "註冊"
+msgstr "Sign up"
+
+msgid "個人頁面"
+msgstr "Profile"
+
+msgid "編輯檔案"
+msgstr "Edit profile"
+
+msgid "等等吃啥"
+msgstr "EatWhat"
+
+msgid "美食社群"
+msgstr "Food Community"
+
+msgid "發現下一餐吃什麼"
+msgstr "Discover your next meal"
+
+msgid "登入後即可瀏覽美食動態、發文、使用 AI 助理與健康達人分析。"
+msgstr "Sign in to browse the feed, post, use the AI assistant, and health insights."
+
+msgid "免費註冊"
+msgstr "Sign up free"
+
+msgid "探索美食動態"
+msgstr "Explore the feed"

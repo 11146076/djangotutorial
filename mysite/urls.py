@@ -17,10 +17,12 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from django.views.i18n import set_language
 
 from mysite.admin_site import eatwhat_admin
 
 urlpatterns = [
+    path("i18n/setlang/", set_language, name="set_language"),
     path("admin/", eatwhat_admin.urls),
     path("captcha/", include("captcha.urls")),
     path("api/v1/", include("posts.api.urls")),

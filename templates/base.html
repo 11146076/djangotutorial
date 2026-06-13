@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -328,17 +328,18 @@
 
         {# 桌面版導覽 #}
         <div class="hidden items-center gap-1 md:flex md:gap-2">
-          <a class="saas-nav-link" href="{% url 'posts:feed' %}">首頁</a>
+          {% include "partials/language_switcher.html" %}
+          <a class="saas-nav-link" href="{% url 'posts:feed' %}">{% trans "首頁" %}</a>
           {% if user.is_authenticated %}
-            <a class="saas-nav-link" href="{% url 'posts:collections_list' %}">我的收藏</a>
+            <a class="saas-nav-link" href="{% url 'posts:collections_list' %}">{% trans "我的收藏" %}</a>
             <a class="saas-nav-link max-w-[10rem] truncate" href="{% url 'accounts:profile_detail' user.username %}" title="{{ user.username }}">{{ user.username }}</a>
             <form method="post" action="{% url 'accounts:logout' %}" class="m-0 inline">
               {% csrf_token %}
-              <button type="submit" class="saas-btn-ghost cursor-pointer text-sm">登出</button>
+              <button type="submit" class="saas-btn-ghost cursor-pointer text-sm">{% trans "登出" %}</button>
             </form>
           {% else %}
-            <a class="saas-nav-link" href="{% url 'accounts:login' %}">登入</a>
-            <a class="saas-btn-primary text-sm" href="{% url 'accounts:register' %}">註冊</a>
+            <a class="saas-nav-link" href="{% url 'accounts:login' %}">{% trans "登入" %}</a>
+            <a class="saas-btn-primary text-sm" href="{% url 'accounts:register' %}">{% trans "註冊" %}</a>
           {% endif %}
         </div>
 
@@ -372,18 +373,19 @@
         x-transition:leave-end="opacity-0 -translate-y-1"
       >
         <div class="flex flex-col gap-1 pb-2">
-          <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:feed' %}" @click="open = false">首頁</a>
+          <div class="px-4 py-2">{% include "partials/language_switcher.html" %}</div>
+          <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:feed' %}" @click="open = false">{% trans "首頁" %}</a>
           {% if user.is_authenticated %}
-            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:collections_list' %}" @click="open = false">我的收藏</a>
-            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">個人頁面</a>
-            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_edit' %}" @click="open = false">編輯檔案</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:collections_list' %}" @click="open = false">{% trans "我的收藏" %}</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">{% trans "個人頁面" %}</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_edit' %}" @click="open = false">{% trans "編輯檔案" %}</a>
             <form method="post" action="{% url 'accounts:logout' %}" class="m-0 w-full px-4 py-2" @submit="open = false">
               {% csrf_token %}
-              <button type="submit" class="saas-btn-ghost w-full cursor-pointer">登出</button>
+              <button type="submit" class="saas-btn-ghost w-full cursor-pointer">{% trans "登出" %}</button>
             </form>
           {% else %}
-            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:login' %}" @click="open = false">登入</a>
-            <a class="saas-btn-primary mx-4 block text-center" href="{% url 'accounts:register' %}" @click="open = false">註冊</a>
+            <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:login' %}" @click="open = false">{% trans "登入" %}</a>
+            <a class="saas-btn-primary mx-4 block text-center" href="{% url 'accounts:register' %}" @click="open = false">{% trans "註冊" %}</a>
           {% endif %}
         </div>
       </div>
