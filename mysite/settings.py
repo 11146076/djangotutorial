@@ -91,11 +91,9 @@ TEMPLATES = [
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
 
-# Database
+# Database — MariaDB / MySQL（預設，取代 SQLite）
+# 開發環境若使用 PyMySQL 而非 mysqlclient，請設 USE_MYSQL=1
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-#
-# Default: SQLite (no MariaDB required). For MariaDB, set env USE_MYSQL=1 and start the server.
-# _USE_MYSQL = os.environ.get("USE_MYSQL", "").strip().lower() in ("1", "true", "yes")
 
 DATABASES = {
     "default": {
@@ -104,7 +102,11 @@ DATABASES = {
         "USER": os.environ.get("DB_USER", "").strip(),
         "PASSWORD": os.environ.get("DB_PASSWORD", "").strip(),
         "HOST": os.environ.get("DB_HOST", "127.0.0.1").strip(),
-        "PORT": os.environ.get("DB_PORT", "3308").strip(),
+        "PORT": os.environ.get("DB_PORT", "3306").strip(),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 

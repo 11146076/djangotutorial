@@ -1,6 +1,6 @@
 import os
 
-# Only when USE_MYSQL=1 (MariaDB/MySQL). Otherwise settings use SQLite and PyMySQL is not needed.
+# Only when USE_MYSQL=1 (Windows 開發常用 PyMySQL 取代 mysqlclient)。
 if os.environ.get("USE_MYSQL", "").strip().lower() in ("1", "true", "yes"):
     import pymysql
 
