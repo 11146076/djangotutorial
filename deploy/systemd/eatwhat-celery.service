@@ -1,0 +1,17 @@
+[Unit]
+Description=EatWhat Celery Worker
+After=network.target redis.service eatwhat.service
+Wants=redis.service
+
+[Service]
+Type=simple
+User=eatwhat
+Group=eatwhat
+WorkingDirectory=/srv/eatwhat/app
+EnvironmentFile=/srv/eatwhat/app/.env
+ExecStart=/srv/eatwhat/app/.venv/bin/celery -A mysite worker -l info
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

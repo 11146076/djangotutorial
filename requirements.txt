@@ -12,3 +12,4 @@ django-import-export>=4.3
 mysqlclient>=2.1
 celery>=5.4
 redis>=5.0
+gunicorn>=22.0,<24

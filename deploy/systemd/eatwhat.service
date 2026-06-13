@@ -1,0 +1,24 @@
+[Unit]
+Description=EatWhat Django Application (Gunicorn WSGI)
+After=network.target mariadb.service mysql.service
+Wants=mariadb.service
+
+[Service]
+Type=notify
+User=eatwhat
+Group=eatwhat
+WorkingDirectory=/srv/eatwhat/app
+EnvironmentFile=/srv/eatwhat/app/.env
+RuntimeDirectory=eatwhat
+RuntimeDirectoryMode=0750
+ExecStart=/srv/eatwhat/app/.venv/bin/gunicorn \
+    --config /srv/eatwhat/app/deploy/gunicorn/gunicorn.conf.py \
+    mysite.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
