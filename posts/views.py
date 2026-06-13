@@ -18,6 +18,9 @@ from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
 
+from accounts.permissions import check_role
+from accounts.roles import ROLE_EDITOR
+
 from .forms import CategoryForm, PostEditForm, PostForm, TagForm
 from .models import (
     Category,
@@ -525,8 +528,8 @@ def post_delete(request, pk):
 def _staff_required(request):
     if not request.user.is_authenticated:
         return redirect(settings.LOGIN_URL)
-    if not request.user.is_staff:
-        messages.error(request, "需要管理員權限才能操作。")
+    if not check_role(request.user, ROLE_EDITOR):
+        messages.error(request, "需要編輯以上權限才能操作。")
         return redirect("posts:feed")
     return None
 

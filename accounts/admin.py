@@ -4,7 +4,7 @@ from django.db.models import Count
 
 from mysite.admin_site import eatwhat_admin
 
-from .models import Profile, User
+from .models import ApiKey, Profile, User
 
 
 class ProfileInline(admin.StackedInline):
@@ -50,3 +50,20 @@ class ProfileAdmin(admin.ModelAdmin):
 
 eatwhat_admin.register(User, UserAdmin)
 eatwhat_admin.register(Profile, ProfileAdmin)
+
+
+class ApiKeyAdmin(admin.ModelAdmin):
+    list_display = ("name", "user", "role", "is_active", "created_at", "last_used_at")
+    list_filter = ("role", "is_active")
+    search_fields = ("name", "user__username", "key")
+    readonly_fields = ("key", "created_at", "last_used_at")
+    autocomplete_fields = ("user",)
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.key:
+            obj.key = ApiKey.generate_key()
+        super().save_model(request, obj, form, change)
+
+
+eatwhat_admin.register(ApiKey, ApiKeyAdmin)
+
