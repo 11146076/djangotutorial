@@ -3,6 +3,11 @@
 本文件包含用例圖、ERD、部署圖；加分項目含狀態圖與活動圖。  
 可在 [Mermaid Live Editor](https://mermaid.live) 或支援 Mermaid 的 Markdown 編輯器預覽。
 
+> **環境說明**
+> - **本機開發**：Windows 上執行 `python manage.py runserver`（Django 開發伺服器）
+> - **目標正式環境**：Linux + Nginx Virtual Host + Gunicorn WSGI（設定見 `deploy/README.md`）
+> - 下列部署圖描述的是**目標正式架構**，不代表目前已部署至虛擬機
+
 ---
 
 ## 1. 用例圖（Use Case Diagram）
@@ -49,6 +54,8 @@ flowchart LR
 
 ## 2. ERD（實體關係模型）
 
+對應 `accounts`、`posts` 等 app 的 ORM 與資料表名稱。
+
 ```mermaid
 erDiagram
     USERS ||--|| PROFILES : has
@@ -56,9 +63,11 @@ erDiagram
     USERS ||--o{ POSTS : authors
     USERS ||--o{ LIKES : gives
     USERS ||--o{ COLLECTIONS : saves
-    USERS ||--o{ FOLLOWS : follows
+    USERS ||--o{ FOLLOWS : follower
+    USERS ||--o{ FOLLOWS : following
     USERS ||--o{ POST_COMMENT : writes
     USERS ||--o{ AI_CHAT_LOGS : chats
+    USERS ||--o{ SEARCH_LOGS : searches
 
     CATEGORIES ||--o{ POSTS : categorizes
     TAGS }o--o{ POSTS : tags
@@ -66,7 +75,8 @@ erDiagram
     POSTS ||--o{ LIKES : receives
     POSTS ||--o{ COLLECTIONS : collected_in
     POSTS ||--o{ POST_COMMENT : has
-    POSTS ||--o| POST_HEALTH_INSIGHTS : latest_insight
+    POSTS ||--o{ POST_HEALTH_INSIGHTS : has_many
+    POSTS }o--o| POST_HEALTH_INSIGHTS : latest_pointer
 
     POST_COMMENT ||--o{ POST_COMMENT_LIKES : receives
     POST_COMMENT ||--o| POST_COMMENT : replies_to
@@ -81,7 +91,7 @@ erDiagram
     }
 
     PROFILES {
-        bigint user_id PK,FK
+        bigint user_id PK_FK
         varchar avatar
         text bio
         varchar dietary_preference
@@ -99,6 +109,8 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint category_id FK
+        bigint latest_health_insight_id FK
+        varchar title
         text content
         varchar visibility
         int like_count
@@ -115,11 +127,18 @@ erDiagram
         varchar name
     }
 
+    FOLLOWS {
+        bigint id PK
+        bigint follower_id FK
+        bigint following_id FK
+    }
+
     POST_HEALTH_INSIGHTS {
         bigint id PK
         bigint post_id FK
         int calories
         char health_rank
+        varchar reason
         varchar status
     }
 ```
@@ -128,14 +147,16 @@ erDiagram
 
 ## 3. 部署圖（Deployment Diagram）
 
+**目標正式環境**（Linux 伺服器或虛擬機）。本機 demo 以 `runserver` 取代 Gunicorn + Nginx。
+
 ```mermaid
 flowchart TB
     subgraph Client["使用者端"]
         Browser[Web Browser]
-        APIClient[外部 API Client]
+        APIClient[外部 API Client\nJWT / API Key]
     end
 
-    subgraph LinuxServer["Linux Server"]
+    subgraph LinuxServer["Linux Server（目標正式環境）"]
         subgraph Nginx["Nginx Virtual Host"]
             Static[/static/]
             Media[/media/]
@@ -167,20 +188,20 @@ flowchart TB
     Django --> LogFiles
     Celery --> Redis
     Celery --> MariaDB
-    Celery --> Django
 ```
 
 ---
 
 ## 4. 狀態圖 — 貼文健康分析（加分）
 
+對應 `PostHealthInsight.status`：`pending` → `completed` / `failed`；後台可重新觸發分析。
+
 ```mermaid
 stateDiagram-v2
-    [*] --> pending: 發文觸發 Celery 任務
+    [*] --> pending: 發文後觸發 Celery 任務
     pending --> completed: AI 分析成功
-    pending --> failed: AI 逾時/錯誤
-    failed --> pending: 管理員重試
-    completed --> pending: 內容更新重分析
+    pending --> failed: AI 逾時或錯誤
+    failed --> pending: 後台重新分析
     completed --> [*]
     failed --> [*]
 ```
@@ -189,9 +210,11 @@ stateDiagram-v2
 
 ## 5. 活動圖 — 使用者登入（加分）
 
+對應登入表單：帳密 + CAPTCHA +「我不是機器人」勾選。
+
 ```mermaid
 flowchart TD
-    A[開啟登入頁] --> B[輸入帳號/密碼]
+    A[開啟登入頁] --> B[輸入帳號或 Email / 密碼]
     B --> C[輸入 CAPTCHA]
     C --> D{勾選我不是機器人?}
     D -- 否 --> E[顯示錯誤]
@@ -217,11 +240,11 @@ classDiagram
         +username
         +email
         +role
-        +authenticate()
     }
     class Profile {
         +avatar
         +bio
+        +dietary_preference
     }
     class ApiKey {
         +key
@@ -234,15 +257,27 @@ classDiagram
         +visibility
         +gallery_images()
     }
+    class PostHealthInsight {
+        +calories
+        +health_rank
+        +status
+    }
     class Category
     class Tag
     class Collection
     class Like
+    class Follow
 
     User "1" --> "1" Profile
     User "1" --> "*" ApiKey
     User "1" --> "*" Post
     Post "*" --> "0..1" Category
     Post "*" --> "*" Tag
-    User "*" --> "*" Post : Collection
+    Post "1" --> "*" PostHealthInsight
+    Post "0..1" --> "1" PostHealthInsight : latest
+    User "1" --> "*" Collection
+    Collection "*" --> "1" Post
+    User "1" --> "*" Like
+    Like "*" --> "1" Post
+    User "1" --> "*" Follow : follower
 ```
