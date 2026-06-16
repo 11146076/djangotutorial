@@ -114,7 +114,7 @@
       <p class="saas-section-title">{% trans "探索美食動態" %}</p>
       <button id="health-mode-toggle" type="button" class="health-mode-toggle" aria-pressed="false">
         <span class="health-mode-track"><span class="health-mode-thumb"></span></span>
-        <span class="health-mode-label">健康達人</span>
+        <span class="health-mode-label">{% trans "健康達人" %}</span>
       </button>
     </div>
     <form id="feed-search-form" action="{% url 'posts:feed' %}" method="get" data-show-loading-on-submit class="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
@@ -123,16 +123,16 @@
         name="q"
         value="{{ search_query|default:'' }}"
         class="saas-input min-h-11 w-full border px-3 py-2 text-base sm:text-sm"
-        placeholder="搜尋貼文內容或發文者"
+        placeholder="{% trans '搜尋貼文內容或發文者' %}"
       >
       <div class="flex gap-2">
-        <button type="submit" class="saas-btn-primary">搜尋</button>
-        <a href="{% url 'posts:feed' %}" class="saas-btn-ghost">清除</a>
+        <button type="submit" class="saas-btn-primary">{% trans "搜尋" %}</button>
+        <a href="{% url 'posts:feed' %}" class="saas-btn-ghost">{% trans "清除" %}</a>
       </div>
 
       <div id="feed-selected-categories-box" class="sm:col-span-2 {% if not selected_category_ids %}hidden{% endif %}">
         <div class="mt-1 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
-          <p class="text-xs font-medium text-emerald-700">搜尋中分類</p>
+          <p class="text-xs font-medium text-emerald-700">{% trans "搜尋中分類" %}</p>
           <div id="feed-selected-categories-list" class="mt-1 flex flex-wrap gap-1.5">
             {% for c in categories %}
               {% if c.id in selected_category_ids %}
@@ -145,7 +145,7 @@
 
       <div id="feed-selected-tags-box" class="sm:col-span-2 {% if not selected_tag_ids %}hidden{% endif %}">
         <div class="mt-1 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
-          <p class="text-xs font-medium text-sky-700">搜尋中標籤</p>
+          <p class="text-xs font-medium text-sky-700">{% trans "搜尋中標籤" %}</p>
           <div id="feed-selected-tags-list" class="mt-1 flex flex-wrap gap-1.5">
             {% for t in tags %}
               {% if t.id in selected_tag_ids %}
@@ -158,7 +158,7 @@
 
       <div class="grid gap-3 sm:col-span-2 sm:grid-cols-2">
         <div>
-          <label for="feed-category" class="mb-1 block text-sm font-medium text-slate-600">分類</label>
+          <label for="feed-category" class="mb-1 block text-sm font-medium text-slate-600">{% trans "分類" %}</label>
           <select
             id="feed-category"
             name="category"
@@ -173,7 +173,7 @@
           </select>
         </div>
         <div>
-          <label for="feed-tag" class="mb-1 block text-sm font-medium text-slate-600">標籤</label>
+          <label for="feed-tag" class="mb-1 block text-sm font-medium text-slate-600">{% trans "標籤" %}</label>
           <select
             id="feed-tag"
             name="tag"
@@ -188,11 +188,11 @@
           </select>
         </div>
       </div>
-      <p id="feed-filter-hint" class="text-xs text-slate-500 sm:col-span-2">可複選：按住 Ctrl再點選多項；不選表示不限。</p>
+      <p id="feed-filter-hint" class="text-xs text-slate-500 sm:col-span-2">{% trans "可複選：按住 Ctrl 再點選多項；不選表示不限。" %}</p>
     </form>
 
     {% if search_query %}
-      <p class="mt-2 text-sm text-slate-500">關鍵字「{{ search_query }}」共找到 {{ results_count }} 篇貼文</p>
+      <p class="mt-2 text-sm text-slate-500">{% blocktrans with q=search_query count=results_count %}關鍵字「{{ q }}」共找到 {{ count }} 篇貼文{% endblocktrans %}</p>
     {% endif %}
   </div>
 
@@ -204,8 +204,8 @@
             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
           </span>
           <div class="min-w-0 text-left">
-            <p class="font-semibold text-slate-800">發表貼文</p>
-            <p class="text-sm text-slate-500">點一下展開表單</p>
+            <p class="font-semibold text-slate-800">{% trans "發表貼文" %}</p>
+            <p class="text-sm text-slate-500">{% trans "點一下展開表單" %}</p>
           </div>
         </div>
         <span class="compose-chevron shrink-0 text-slate-400 transition-transform duration-200" aria-hidden="true">
@@ -219,53 +219,53 @@
             <div class="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">{{ form.non_field_errors }}</div>
           {% endif %}
           <div class="mb-3">
-            <label for="{{ form.title.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">標題</label>
+            <label for="{{ form.title.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">{% trans "標題" %}</label>
             {{ form.title }}
             {% if form.title.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.title.errors.0 }}</p>{% endif %}
           </div>
           <div class="mb-3 grid gap-3 sm:grid-cols-3">
             <div>
-              <label for="{{ form.category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">分類</label>
+              <label for="{{ form.category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">{% trans "分類" %}</label>
               {{ form.category }}
               {% if form.category.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.category.errors.0 }}</p>{% endif %}
             </div>
             <div>
-              <label for="{{ form.visibility.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">誰可以看到</label>
+              <label for="{{ form.visibility.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">{% trans "誰可以看到" %}</label>
               {{ form.visibility }}
               {% if form.visibility.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.visibility.errors.0 }}</p>{% endif %}
             </div>
             <div>
-              <label for="{{ form.new_category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">新增分類</label>
+              <label for="{{ form.new_category.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">{% trans "新增分類" %}</label>
               {{ form.new_category }}
               {% if form.new_category.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.new_category.errors.0 }}</p>{% endif %}
             </div>
           </div>
           <div class="mb-3 space-y-3">
             <fieldset class="min-w-0 border-0 p-0">
-              <legend class="mb-2 text-sm font-medium text-slate-600">標籤（多選）</legend>
+              <legend class="mb-2 text-sm font-medium text-slate-600">{% trans "標籤（多選）" %}</legend>
               {{ form.tags }}
             </fieldset>
             {% if form.tags.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.tags.errors.0 }}</p>{% endif %}
             <div>
-              <label for="{{ form.new_tags.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">新增標籤</label>
+              <label for="{{ form.new_tags.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">{% trans "新增標籤" %}</label>
               {{ form.new_tags }}
               {% if form.new_tags.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.new_tags.errors.0 }}</p>{% endif %}
               <p class="mt-1 text-xs text-slate-500">{{ form.new_tags.help_text }}</p>
             </div>
           </div>
           <div class="mb-3 min-w-0">
-            <label class="mb-1 block text-sm font-medium text-slate-600">發布貼文</label>
+            <label class="mb-1 block text-sm font-medium text-slate-600">{% trans "發布貼文" %}</label>
             <div class="w-full max-w-full min-w-0 overflow-x-auto">
               {{ form.content }}
             </div>
             {% if form.content.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.content.errors.0 }}</p>{% endif %}
           </div>
           <div class="mb-4">
-            <label for="{{ form.gallery.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">貼文附圖（可選，最多 3 張）</label>
+            <label for="{{ form.gallery.id_for_label }}" class="mb-1 block text-sm font-medium text-slate-600">{% trans "貼文附圖（可選，最多 3 張）" %}</label>
             {{ form.gallery }}
             {% if form.gallery.errors %}<p class="mt-1 text-sm text-rose-600">{{ form.gallery.errors.0 }}</p>{% endif %}
           </div>
-          <button type="submit" class="saas-btn-primary w-full sm:w-auto">發布</button>
+          <button type="submit" class="saas-btn-primary w-full sm:w-auto">{% trans "發布" %}</button>
         </form>
       </div>
     </details>
@@ -288,10 +288,10 @@
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <a href="{% url 'accounts:profile_detail' post.author.username %}" class="truncate font-semibold text-slate-800 hover:underline">{{ post.author.username }}</a>
-              <span class="text-sm text-slate-500">{{ post.created_at|timesince }} 前</span>
+              <span class="text-sm text-slate-500">{{ post.created_at|timesince }} {% trans "前" %}</span>
               {% if post.category %}<span class="text-sm text-slate-500">· {{ post.category.name }}</span>{% endif %}
               {% if post.visibility == "private" %}
-                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">僅自己可見</span>
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">{% trans "僅自己可見" %}</span>
               {% endif %}
             </div>
             {% if post.tags.all %}
@@ -307,7 +307,7 @@
           </div>
 
           <div class="shrink-0 flex items-center gap-2">
-            <a href="{% url 'posts:post_detail' post.pk %}" class="saas-btn-ghost px-3 py-2 text-xs sm:text-sm">查看</a>
+            <a href="{% url 'posts:post_detail' post.pk %}" class="saas-btn-ghost px-3 py-2 text-xs sm:text-sm">{% trans "查看" %}</a>
             {% if user.is_authenticated and user == post.author %}
               <a href="{% url 'posts:post_edit' post.pk %}" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:text-sm">編輯</a>
               <a href="{% url 'posts:post_delete' post.pk %}" class="rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 sm:text-sm">刪除</a>
@@ -369,15 +369,15 @@
               {# x-text：讚數由 Alpine 的 count 更新，按讚後不用整頁重新整理 #}
               <span class="inline-flex items-center gap-1">
                 <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
-                <span x-text="count + ' 讚'"></span>
+                <span x-text="count + ' ' + (window.EW_I18N?.likes || '讚')"></span>
               </span>
               <span data-post-comment-count class="inline-flex items-center gap-1">
                 <i class="fa-solid fa-message" aria-hidden="true"></i>
-                <span data-post-comment-count-value>{{ post.comment_count|default:0 }} 留言</span>
+                <span data-post-comment-count-value>{{ post.comment_count|default:0 }} {% trans "留言" %}</span>
               </span>
               <span class="inline-flex items-center gap-1">
                 <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
-                <span x-text="collectionCount + ' 收藏'"></span>
+                <span x-text="collectionCount + ' ' + (window.EW_I18N?.collections || '收藏')"></span>
               </span>
             </div>
 
@@ -400,7 +400,7 @@
                   :disabled="submittingLike"
                 >
                   <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
-                  <span x-text="isLiked ? '取消按讚' : '按讚'"></span>
+                  <span x-text="isLiked ? (window.EW_I18N?.unlike || '取消按讚') : (window.EW_I18N?.like || '按讚')"></span>
                 </button>
               </form>
               <form
@@ -418,7 +418,7 @@
                 >
                   <i x-show="!isCollected" class="fa-regular fa-bookmark" aria-hidden="true"></i>
                   <i x-show="isCollected" x-cloak class="fa-solid fa-bookmark" aria-hidden="true"></i>
-                  <span x-text="isCollected ? '取消收藏' : '收藏'"></span>
+                  <span x-text="isCollected ? (window.EW_I18N?.uncollect || '取消收藏') : (window.EW_I18N?.collect || '收藏')"></span>
                 </button>
               </form>
             </div>
@@ -427,15 +427,15 @@
           <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
             <span class="inline-flex items-center gap-1">
               <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
-              <span>{{ post.like_count }} 讚</span>
+              <span>{{ post.like_count }} {% trans "讚" %}</span>
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="fa-solid fa-message" aria-hidden="true"></i>
-              <span>{{ post.comment_count|default:0 }} 留言</span>
+              <span>{{ post.comment_count|default:0 }} {% trans "留言" %}</span>
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
-              <span>{{ post.collection_count|default:0 }} 收藏</span>
+              <span>{{ post.collection_count|default:0 }} {% trans "收藏" %}</span>
             </span>
           </div>
         {% endif %}
@@ -443,13 +443,13 @@
         {% if user.is_authenticated %}
           <hr class="my-4 border-slate-200">
 
-          <div x-data="{ showComments: {% if post.comment_count|default:0 > 3 %}false{% else %}true{% endif %} }">
+          <div x-data="{ showComments: {% if post.comment_count|default:0 > 3 %}false{% else %}true{% endif %}, commentCount: {{ post.comment_count|default:0 }} }">
             {% if post.comment_count|default:0 > 3 %}
               <button
                 type="button"
                 class="mb-2 text-sm font-medium text-sky-600 hover:underline"
                 @click="showComments = !showComments"
-                x-text="showComments ? '收起留言' : '查看全部 {{ post.comment_count|default:0 }} 則留言'"
+                x-text="showComments ? (window.EW_I18N?.hide_comments || '收起留言') : (window.EW_I18N?.view_all_comments || '查看全部 {n} 則留言').replace('{n}', commentCount)"
               ></button>
             {% endif %}
 
@@ -468,7 +468,7 @@
               {% for node in post.comment_roots %}
                 {% include "posts/_comment_node.html" with node=node %}
               {% empty %}
-                <p class="text-sm text-slate-400" data-comments-empty-placeholder>尚無留言</p>
+                <p class="text-sm text-slate-400" data-comments-empty-placeholder>{% trans "尚無留言" %}</p>
               {% endfor %}
             </div>
           </div>
@@ -477,8 +477,8 @@
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-              <input type="text" name="content" class="min-h-11 w-full flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm" placeholder="留言..." required autocomplete="off">
-              <button type="submit" class="min-h-11 w-full shrink-0 rounded-lg border border-sky-300 px-4 py-2 text-sm font-medium text-sky-600 hover:bg-sky-50 sm:w-auto">送出</button>
+              <input type="text" name="content" class="min-h-11 w-full flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-sky-200 focus:ring sm:text-sm" placeholder="{% trans '留言...' %}" required autocomplete="off">
+              <button type="submit" class="min-h-11 w-full shrink-0 rounded-lg border border-sky-300 px-4 py-2 text-sm font-medium text-sky-600 hover:bg-sky-50 sm:w-auto">{% trans "送出" %}</button>
             </div>
           </form>
         {% endif %}
@@ -495,21 +495,24 @@
       <div class="text-slate-500">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 頁</div>
       <div class="flex gap-2">
         {% if page_obj.has_previous %}
-          <a class="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">上一頁</a>
+          <a class="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">{% trans "上一頁" %}</a>
         {% endif %}
         {% if page_obj.has_next %}
-          <a class="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">下一頁</a>
+          <a class="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50" href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">{% trans "下一頁" %}</a>
         {% endif %}
       </div>
     </nav>
   {% endif %}
 
+  {% trans "回到最上方" as back_to_top_label %}
 <button
   id="feed-new-posts-btn"
   type="button"
   class="saas-btn-morandi fixed bottom-5 left-1/2 z-40 hidden -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold ring-2 ring-white/70 transition sm:bottom-7"
+  data-label-back-to-top="{{ back_to_top_label|escape }}"
+  data-label-new-posts="{% trans '有新貼文，回到上方查看' %}"
 >
-  回到最上方
+  {{ back_to_top_label }}
 </button>
   {% endif %}
 </div>
@@ -532,7 +535,9 @@
       const show = window.scrollY > 180;
       newPostsBtn.classList.toggle("hidden", !show);
       newPostsBtn.classList.toggle("animate-bounce", hasNewPosts);
-      newPostsBtn.textContent = hasNewPosts ? "有新貼文，回到上方查看" : "回到最上方";
+      newPostsBtn.textContent = hasNewPosts
+        ? (newPostsBtn.dataset.labelNewPosts || window.EW_I18N?.new_posts_back_to_top)
+        : (newPostsBtn.dataset.labelBackToTop || window.EW_I18N?.back_to_top);
     }
 
     async function checkNewPosts() {

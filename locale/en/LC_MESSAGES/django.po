@@ -49,3 +49,129 @@ msgstr "Sign up free"
 
 msgid "探索美食動態"
 msgstr "Explore the feed"
+
+msgid "健康達人"
+msgstr "Health Expert"
+
+msgid "搜尋"
+msgstr "Search"
+
+msgid "清除"
+msgstr "Clear"
+
+msgid "分類"
+msgstr "Category"
+
+msgid "標籤"
+msgstr "Tags"
+
+msgid "搜尋貼文內容或發文者"
+msgstr "Search posts or authors"
+
+msgid "搜尋中分類"
+msgstr "Filtering by category"
+
+msgid "搜尋中標籤"
+msgstr "Filtering by tag"
+
+msgid "可複選：按住 Ctrl 再點選多項；不選表示不限。"
+msgstr "Multi-select: hold Ctrl and click; none selected means no limit."
+
+msgid "關鍵字「%(q)s」共找到 %(count)s 篇貼文"
+msgstr "%(count)s posts found for \"%(q)s\""
+
+msgid "發表貼文"
+msgstr "Create post"
+
+msgid "點一下展開表單"
+msgstr "Click to expand form"
+
+msgid "標題"
+msgstr "Title"
+
+msgid "誰可以看到"
+msgstr "Who can see this"
+
+msgid "新增分類"
+msgstr "New category"
+
+msgid "標籤（多選）"
+msgstr "Tags (multi-select)"
+
+msgid "新增標籤"
+msgstr "New tags"
+
+msgid "發布貼文"
+msgstr "Post content"
+
+msgid "貼文附圖（可選，最多 3 張）"
+msgstr "Images (optional, up to 3)"
+
+msgid "發布"
+msgstr "Publish"
+
+msgid "前"
+msgstr "ago"
+
+msgid "僅自己可見"
+msgstr "Private"
+
+msgid "讚"
+msgstr "likes"
+
+msgid "留言"
+msgstr "comments"
+
+msgid "收藏"
+msgstr "saves"
+
+msgid "按讚"
+msgstr "Like"
+
+msgid "取消按讚"
+msgstr "Unlike"
+
+msgid "取消收藏"
+msgstr "Unsave"
+
+msgid "已按讚"
+msgstr "Liked"
+
+msgid "已取消按讚"
+msgstr "Like removed"
+
+msgid "已收藏"
+msgstr "Saved"
+
+msgid "已取消收藏"
+msgstr "Unsaved"
+
+msgid "操作失敗，請稍後再試"
+msgstr "Action failed. Please try again."
+
+msgid "收起留言"
+msgstr "Hide comments"
+
+msgid "查看全部 {n} 則留言"
+msgstr "View all {n} comments"
+
+msgid "尚無留言"
+msgstr "No comments yet"
+
+msgid "留言..."
+msgstr "Write a comment..."
+
+msgid "回到最上方"
+msgstr "Back to top"
+
+msgid "有新貼文，回到上方查看"
+msgstr "New posts — back to top"
+
+msgid "上一頁"
+msgstr "Previous"
+
+msgid "查看"
+msgstr "View"
+
+msgid "送出"
+msgstr "Submit"

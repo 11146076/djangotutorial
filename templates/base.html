@@ -318,12 +318,14 @@
   {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts:ai_chat' %}"{% endif %}
 >
   {{ wheel_tag_items|json_script:"wheel-tag-items" }}
+  {{ ui_i18n|json_script:"eatwhat-i18n" }}
+  <script>window.EW_I18N = JSON.parse(document.getElementById("eatwhat-i18n").textContent);</script>
   <nav class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-800 shadow-sm backdrop-blur-md" x-data="{ open: false }" @keydown.window.escape="open = false">
     <div class="mx-auto max-w-5xl px-3 sm:px-4">
       <div class="flex min-h-14 items-center justify-between gap-2 py-2 sm:min-h-16 sm:py-3">
         <a class="flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight text-brand-teal sm:text-2xl" href="{% url 'posts:feed' %}">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-teal text-lg text-white shadow-saas">🍽</span>
-          <span>等等吃啥</span>
+          <span>{% trans "等等吃啥" %}</span>
         </a>
 
         {# 桌面版導覽 #}
@@ -582,9 +584,9 @@
             const data = await response.json();
             this.isLiked = !!data.is_liked;
             this.count = Number(data.like_count) || 0;
-            this.bumpMsg(this.isLiked ? "已按讚" : "已取消按讚");
+            this.bumpMsg(this.isLiked ? (window.EW_I18N?.liked || "已按讚") : (window.EW_I18N?.unliked || "已取消按讚"));
           } catch (e) {
-            this.bumpMsg("操作失敗，請稍後再試");
+            this.bumpMsg(window.EW_I18N?.action_failed || "操作失敗，請稍後再試");
           } finally {
             this.submittingLike = false;
           }
@@ -607,9 +609,9 @@
             const data = await response.json();
             this.isCollected = !!data.is_collected;
             this.collectionCount = Number(data.collection_count) || 0;
-            this.bumpMsg(this.isCollected ? "已收藏" : "已取消收藏");
+            this.bumpMsg(this.isCollected ? (window.EW_I18N?.collected || "已收藏") : (window.EW_I18N?.uncollected || "已取消收藏"));
           } catch (e) {
-            this.bumpMsg("操作失敗，請稍後再試");
+            this.bumpMsg(window.EW_I18N?.action_failed || "操作失敗，請稍後再試");
           } finally {
             this.submittingCollect = false;
           }
@@ -651,9 +653,9 @@
             const data = await response.json();
             this.isLiked = !!data.is_liked;
             this.count = Number(data.like_count) || 0;
-            this.bumpMsg(this.isLiked ? "已按讚" : "已取消按讚");
+            this.bumpMsg(this.isLiked ? (window.EW_I18N?.liked || "已按讚") : (window.EW_I18N?.unliked || "已取消按讚"));
           } catch (e) {
-            this.bumpMsg("操作失敗，請稍後再試");
+            this.bumpMsg(window.EW_I18N?.action_failed || "操作失敗，請稍後再試");
           } finally {
             this.submitting = false;
           }
@@ -768,11 +770,12 @@
             }
 
             if (countEl && typeof data.comment_count === "number") {
+              const unit = window.EW_I18N?.comments || "留言";
               const countValueEl = countEl.querySelector("[data-post-comment-count-value]");
               if (countValueEl) {
-                countValueEl.textContent = `${data.comment_count} 留言`;
+                countValueEl.textContent = `${data.comment_count} ${unit}`;
               } else {
-                countEl.textContent = `${data.comment_count} 留言`;
+                countEl.textContent = `${data.comment_count} ${unit}`;
               }
             }
             form.reset();
