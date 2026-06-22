@@ -71,6 +71,7 @@ def profile_edit(request):
 
 PROFILE_POSTS_PER_PAGE = 10
 PROFILE_COMMENTS_PER_PAGE = 10
+PROFILE_FOLLOWING_PER_PAGE = 20
 
 
 def _profile_header_context(request, username):
@@ -133,6 +134,27 @@ def profile_comments(request, username):
         {
             **base,
             "active_section": "comments",
+            "page_obj": page_obj,
+        },
+    )
+
+
+def profile_following(request, username):
+    base = _profile_header_context(request, username)
+    following_qs = (
+        Follow.objects.filter(follower=base["profile_user"])
+        .select_related("following", "following__profile")
+        .order_by("-created_at", "-id")
+    )
+    paginator = Paginator(following_qs, PROFILE_FOLLOWING_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get("page") or 1)
+
+    return render(
+        request,
+        "accounts/profile_detail.html",
+        {
+            **base,
+            "active_section": "following",
             "page_obj": page_obj,
         },
     )

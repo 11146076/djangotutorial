@@ -345,6 +345,9 @@ NVIDIA_INVOKE_URL = os.environ.get(
 NVIDIA_BACKUP_API_KEY = os.environ.get("NVIDIA_BACKUP_API_KEY", "").strip()
 NVIDIA_BACKUP_MODEL = os.environ.get("NVIDIA_BACKUP_MODEL", NVIDIA_MODEL).strip()
 AI_REQUEST_TIMEOUT_SECONDS = int(os.environ.get("AI_REQUEST_TIMEOUT_SECONDS", "35").strip() or "35")
+AI_HEALTH_REQUEST_TIMEOUT_SECONDS = int(
+    os.environ.get("AI_HEALTH_REQUEST_TIMEOUT_SECONDS", "90").strip() or "90"
+)
 
 # Celery（背景任務：健康達人分析）
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0").strip()

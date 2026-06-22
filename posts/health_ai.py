@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from django.conf import settings
 
 from .ai_chat import (
     AIProviderError,
+    _ai_settings,
     _build_gemini_contents,
     _build_nvidia_messages,
     _prepare_vision_image,
     call_gemini_generate,
     call_nvidia_chat_completions,
 )
+
+logger = logging.getLogger("posts.health_ai")
 
 HEALTH_ESTIMATE_SYSTEM_PROMPT = """你是美食健康估算助手。
 請根據使用者提供的食物描述與圖片內容，估算熱量與健康分級。
@@ -25,6 +29,14 @@ HEALTH_ESTIMATE_SYSTEM_PROMPT = """你是美食健康估算助手。
 3. reason 需為繁體中文一句話，18 字內。
 4. 不能輸出任何 JSON 以外文字。
 """
+
+
+def _health_request_timeout() -> int:
+    raw = int(getattr(settings, "AI_HEALTH_REQUEST_TIMEOUT_SECONDS", 0) or 0)
+    if raw > 0:
+        return max(30, raw)
+    base = int(getattr(settings, "AI_REQUEST_TIMEOUT_SECONDS", 35) or 35)
+    return max(60, base)
 
 
 def _extract_json_dict(raw: str) -> dict[str, Any]:
@@ -61,36 +73,111 @@ def _normalize_health_payload(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _build_health_messages(*, user_message: str, vision_image: tuple[str, bytes] | None) -> list[dict[str, Any]]:
+    message_for_model = f"{HEALTH_ESTIMATE_SYSTEM_PROMPT}\n\n使用者內容：{user_message}"
+    msgs = _build_nvidia_messages([], message_for_model, vision_image)
+    msgs[0]["content"] = HEALTH_ESTIMATE_SYSTEM_PROMPT
+    return msgs
+
+
+def _call_nvidia_health(
+    *,
+    api_key: str,
+    model: str,
+    invoke_url: str,
+    user_message: str,
+    vision_image: tuple[str, bytes] | None,
+    timeout_seconds: int,
+) -> tuple[dict[str, Any], str]:
+    raw = call_nvidia_chat_completions(
+        messages=_build_health_messages(user_message=user_message, vision_image=vision_image),
+        api_key=api_key,
+        model=model,
+        invoke_url=invoke_url,
+        temperature=0.2,
+        max_tokens=120,
+        timeout_seconds=timeout_seconds,
+    )
+    return _normalize_health_payload(_extract_json_dict(raw)), model
+
+
+def _call_gemini_health(
+    *,
+    api_key: str,
+    model: str,
+    user_message: str,
+    vision_image: tuple[str, bytes] | None,
+    timeout_seconds: int,
+) -> tuple[dict[str, Any], str]:
+    message_for_model = f"{HEALTH_ESTIMATE_SYSTEM_PROMPT}\n\n使用者內容：{user_message}"
+    contents = _build_gemini_contents([], message_for_model, vision_image)
+    raw = call_gemini_generate(
+        contents=contents,
+        model=model,
+        api_key=api_key,
+        timeout_seconds=timeout_seconds,
+    )
+    return _normalize_health_payload(_extract_json_dict(raw)), model
+
+
 def estimate_post_health(*, content: str, image: tuple[str, bytes] | None) -> tuple[dict[str, Any], str]:
     user_message = (content or "").strip()
     if not user_message:
         user_message = "請根據圖片估算這份餐點熱量與健康等級。"
 
-    nvidia_key = (getattr(settings, "NVIDIA_API_KEY", "") or "").strip()
-    nvidia_model = getattr(settings, "NVIDIA_MODEL", "meta/llama-3.2-11b-vision-instruct")
-    nvidia_url = getattr(settings, "NVIDIA_INVOKE_URL", "").strip() or "https://integrate.api.nvidia.com/v1/chat/completions"
-    gemini_key = (getattr(settings, "GEMINI_API_KEY", "") or "").strip()
-    gemini_model = getattr(settings, "GEMINI_MODEL", "gemini-2.0-flash")
-
-    message_for_model = f"{HEALTH_ESTIMATE_SYSTEM_PROMPT}\n\n使用者內容：{user_message}"
+    cfg = _ai_settings()
     vision_image = _prepare_vision_image(image)
+    timeout_seconds = _health_request_timeout()
+    errors: list[str] = []
 
-    if nvidia_key:
-        msgs = _build_nvidia_messages([], message_for_model, vision_image)
-        msgs[0]["content"] = HEALTH_ESTIMATE_SYSTEM_PROMPT
-        raw = call_nvidia_chat_completions(
-            messages=msgs,
-            api_key=nvidia_key,
-            model=nvidia_model,
-            invoke_url=nvidia_url,
-            temperature=0.2,
-            max_tokens=120,
-        )
-        return _normalize_health_payload(_extract_json_dict(raw)), nvidia_model
+    if cfg["nvidia_key"]:
+        try:
+            return _call_nvidia_health(
+                api_key=cfg["nvidia_key"],
+                model=cfg["nvidia_model"],
+                invoke_url=cfg["nvidia_url"],
+                user_message=user_message,
+                vision_image=vision_image,
+                timeout_seconds=timeout_seconds,
+            )
+        except AIProviderError as exc:
+            logger.warning("health nvidia primary failed: %s", exc.message)
+            if not exc.transient:
+                raise
+            errors.append(exc.message)
 
-    if gemini_key:
-        contents = _build_gemini_contents([], message_for_model, vision_image)
-        raw = call_gemini_generate(contents=contents, model=gemini_model, api_key=gemini_key)
-        return _normalize_health_payload(_extract_json_dict(raw)), gemini_model
+    if cfg["nvidia_backup_key"] and cfg["nvidia_backup_key"] != cfg["nvidia_key"]:
+        try:
+            return _call_nvidia_health(
+                api_key=cfg["nvidia_backup_key"],
+                model=cfg["nvidia_backup_model"],
+                invoke_url=cfg["nvidia_url"],
+                user_message=user_message,
+                vision_image=vision_image,
+                timeout_seconds=timeout_seconds,
+            )
+        except AIProviderError as exc:
+            logger.warning("health nvidia backup failed: %s", exc.message)
+            if not exc.transient:
+                raise
+            errors.append(exc.message)
+
+    if cfg["gemini_key"]:
+        try:
+            return _call_gemini_health(
+                api_key=cfg["gemini_key"],
+                model=cfg["gemini_model"],
+                user_message=user_message,
+                vision_image=vision_image,
+                timeout_seconds=timeout_seconds,
+            )
+        except AIProviderError as exc:
+            logger.warning("health gemini failed: %s", exc.message)
+            if not exc.transient:
+                raise
+            errors.append(exc.message)
+
+    if errors:
+        raise AIProviderError(errors[-1], transient=True)
 
     raise AIProviderError("尚未設定可用的 AI API Key。", transient=False)

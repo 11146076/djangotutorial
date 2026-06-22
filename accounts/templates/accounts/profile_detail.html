@@ -15,7 +15,14 @@
             <h1 class="break-words text-xl font-semibold sm:text-xl">{{ profile_user.username }}</h1>
             {% if profile.bio %}<p class="mt-1 break-words text-sm text-slate-500">{{ profile.bio }}</p>{% endif %}
             {% if profile.dietary_preference %}<p class="mt-2 text-sm text-sky-600">體質紀錄：{{ profile.dietary_preference }}</p>{% endif %}
-            <p class="mt-2 text-sm text-slate-500">追蹤中 {{ following_count }} · 粉絲 {{ follower_count }}</p>
+            <p class="mt-2 text-sm text-slate-500">
+              <a
+                href="{% url 'accounts:profile_following' profile_user.username %}"
+                class="font-medium text-sky-600 hover:underline {% if active_section == 'following' %}underline{% endif %}"
+              >追蹤中 {{ following_count }}</a>
+              <span class="text-slate-400"> · </span>
+              粉絲 {{ follower_count }}
+            </p>
           </div>
         </div>
         <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -43,6 +50,10 @@
         href="{% url 'accounts:profile_comments' profile_user.username %}"
         class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'comments' %}bg-sky-500 text-white{% else %}border border-slate-300 text-slate-700 hover:bg-slate-50{% endif %}"
       >留言紀錄</a>
+      <a
+        href="{% url 'accounts:profile_following' profile_user.username %}"
+        class="rounded-lg px-4 py-2 text-sm font-medium {% if active_section == 'following' %}bg-sky-500 text-white{% else %}border border-slate-300 text-slate-700 hover:bg-slate-50{% endif %}"
+      >追蹤中</a>
     </div>
 
     {% if active_section == "posts" %}
@@ -114,6 +125,37 @@
       <p class="text-sm text-slate-500 sm:text-base">尚無貼文。</p>
       {% endfor %}
       </div>
+    {% elif active_section == "following" %}
+      <h2 class="mb-3 text-base font-semibold sm:text-lg">追蹤中</h2>
+      <div class="space-y-2">
+      {% for follow in page_obj %}
+        {% with followed_user=follow.following followed_profile=follow.following.profile %}
+        <a
+          href="{% url 'accounts:profile_posts' followed_user.username %}"
+          class="flex items-center gap-3 rounded-xl bg-white p-4 shadow transition-colors hover:bg-slate-50 sm:p-5"
+        >
+          {% if followed_profile.avatar %}
+            <img src="{{ followed_profile.avatar.url }}" alt="" class="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-slate-200">
+          {% else %}
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-400 text-lg font-semibold text-white ring-1 ring-slate-200">
+              {{ followed_user.username|slice:":1"|upper }}
+            </div>
+          {% endif %}
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-semibold text-slate-800">{{ followed_user.username }}</p>
+            {% if followed_profile.bio %}
+              <p class="mt-0.5 truncate text-sm text-slate-500">{{ followed_profile.bio }}</p>
+            {% else %}
+              <p class="mt-0.5 text-sm text-slate-400">查看全部貼文</p>
+            {% endif %}
+          </div>
+          <span class="shrink-0 text-sm font-medium text-sky-600">貼文 →</span>
+        </a>
+        {% endwith %}
+      {% empty %}
+      <p class="text-sm text-slate-500 sm:text-base">尚未追蹤任何人。</p>
+      {% endfor %}
+      </div>
     {% else %}
       <h2 class="mb-3 text-base font-semibold sm:text-lg">留言紀錄</h2>
       {% for comment in page_obj %}
@@ -133,7 +175,7 @@
     {% if page_obj.paginator.num_pages > 1 %}
     <nav class="mt-4 flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm shadow sm:px-5">
       <div class="text-slate-500">
-        {% if active_section == "posts" %}貼文{% else %}留言{% endif %}：第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 頁
+        {% if active_section == "posts" %}貼文{% elif active_section == "following" %}追蹤中{% else %}留言{% endif %}：第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 頁
       </div>
       <div class="flex gap-2">
         {% if page_obj.has_previous %}

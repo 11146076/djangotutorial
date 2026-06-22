@@ -26,6 +26,7 @@ from .models import (
     Category,
     Collection,
     CommentLike,
+    Follow,
     Like,
     Post,
     PostComment,
@@ -33,6 +34,7 @@ from .models import (
     Tag,
 )
 from .tasks import analyze_post_health_task
+from .recommendations import RECOMMENDATION_FEED_TOP_COUNT, get_personalized_recommendations
 
 
 def _wants_json(request):
@@ -76,11 +78,70 @@ def _annotate_subtree_reply_counts(nodes):
         count_under(node)
 
 
+def _attach_comment_roots(posts):
+    """為每篇貼文組出留言樹狀結構（root -> replies）。"""
+    for p in posts:
+        comments = list(p.post_comments.all().order_by("created_at"))
+        by_id = {c.id: c for c in comments}
+        for c in by_id.values():
+            c.replies = []
+        roots = []
+        for c in comments:
+            if c.parent_id and c.parent_id in by_id:
+                by_id[c.parent_id].replies.append(c)
+            else:
+                roots.append(c)
+        _annotate_subtree_reply_counts(roots)
+        p.comment_roots = roots
+
+
+def _annotate_posts_for_user(posts_qs, user):
+    if user.is_authenticated:
+        return posts_qs.annotate(
+            user_has_liked=Exists(Like.objects.filter(post_id=OuterRef("pk"), user_id=user.id)),
+            user_has_collected=Exists(
+                Collection.objects.filter(post_id=OuterRef("pk"), user_id=user.id)
+            ),
+        )
+    return posts_qs
+
+
+def _fetch_recommended_feed_posts(user, *, limit: int = RECOMMENDATION_FEED_TOP_COUNT):
+    """取得首頁置頂推薦貼文（含互動 annotate）。"""
+    items, meta = get_personalized_recommendations(user, limit=limit)
+    if not items:
+        return [], meta
+
+    rec_ids = [item.post.id for item in items]
+    reason_map = {item.post.id: item.reason for item in items}
+    rec_qs = _annotate_posts_for_user(
+        Post.objects.filter(pk__in=rec_ids)
+        .select_related("author", "author__profile", "category", "latest_health_insight")
+        .prefetch_related("likes", "post_comments", "tags")
+        .annotate(
+            comment_count=Count("post_comments", distinct=True),
+            collection_count=Count("collections", distinct=True),
+        ),
+        user,
+    )
+    rec_by_id = {p.id: p for p in rec_qs}
+    rec_posts = []
+    for post_id in rec_ids:
+        post = rec_by_id.get(post_id)
+        if not post:
+            continue
+        post.is_recommended = True
+        post.recommendation_reason = reason_map.get(post_id, "")
+        rec_posts.append(post)
+    return rec_posts, meta
+
+
 def feed(request):
     search_query = (request.GET.get("q") or "").strip()
     category_ids = _parse_positive_id_list(request.GET.getlist("category"))
     tag_ids = _parse_positive_id_list(request.GET.getlist("tag"))
     page_number = (request.GET.get("page") or "").strip()
+    following_only = (request.GET.get("following") or "").strip().lower() in ("1", "true", "on", "yes")
 
     if len(search_query) > 100:
         search_query = search_query[:100]
@@ -117,9 +178,12 @@ def feed(request):
         )
     )
     if request.user.is_authenticated:
-        posts = posts.filter(
-            Q(visibility=Post.VISIBILITY_PUBLIC) | Q(author_id=request.user.id)
-        )
+        if following_only:
+            posts = posts.filter(visibility=Post.VISIBILITY_PUBLIC)
+        else:
+            posts = posts.filter(
+                Q(visibility=Post.VISIBILITY_PUBLIC) | Q(author_id=request.user.id)
+            )
     else:
         posts = posts.filter(visibility=Post.VISIBILITY_PUBLIC)
     if search_query:
@@ -146,24 +210,53 @@ def feed(request):
         valid_tags = list(Tag.objects.filter(id__in=tag_ids).values_list("id", flat=True))
         if valid_tags:
             posts = posts.filter(tags__id__in=valid_tags).distinct()
+
+    if following_only:
+        if not request.user.is_authenticated:
+            following_only = False
+        else:
+            following_ids = list(
+                Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
+            )
+            following_ids = [uid for uid in following_ids if uid != request.user.id]
+            if following_ids:
+                posts = posts.filter(author_id__in=following_ids).exclude(author_id=request.user.id)
+            else:
+                posts = posts.none()
+
     # annotate / distinct 會讓預設 Meta.ordering 失效，須明確指定：最新貼文在上
     posts = posts.order_by("-created_at", "-id")
 
-    if request.user.is_authenticated:
-        posts = posts.annotate(
-            user_has_liked=Exists(Like.objects.filter(post_id=OuterRef("pk"), user_id=request.user.id)),
-            user_has_collected=Exists(
-                Collection.objects.filter(post_id=OuterRef("pk"), user_id=request.user.id)
-            ),
-        )
+    show_recommendations = (
+        request.user.is_authenticated
+        and not search_query
+        and not category_ids
+        and not tag_ids
+        and not following_only
+        and (not page_number or page_number == "1")
+    )
+
+    recommended_feed_posts: list = []
+    recommendation_meta: dict = {}
+    if show_recommendations:
+        recommended_feed_posts, recommendation_meta = _fetch_recommended_feed_posts(request.user)
+        if recommended_feed_posts:
+            posts = posts.exclude(pk__in=[p.id for p in recommended_feed_posts])
+
+    posts = _annotate_posts_for_user(posts, request.user)
 
     paginator = Paginator(posts, 20)
     page_obj = paginator.get_page(page_number or 1)
 
+    if show_recommendations and recommended_feed_posts:
+        feed_posts = recommended_feed_posts + list(page_obj.object_list)
+    else:
+        feed_posts = list(page_obj.object_list)
+
     liked_comment_ids = []
     if request.user.is_authenticated:
         comment_ids_on_page = []
-        for p in page_obj.object_list:
+        for p in feed_posts:
             for c in p.post_comments.all():
                 comment_ids_on_page.append(c.id)
         if comment_ids_on_page:
@@ -173,26 +266,13 @@ def feed(request):
                 )
             )
 
-    # 首頁留言改為樹狀顯示：為每篇貼文組出 root -> replies 結構
-    for p in page_obj.object_list:
-        comments = list(p.post_comments.all().order_by("created_at"))
-        by_id = {c.id: c for c in comments}
-        for c in by_id.values():
-            c.replies = []
-        roots = []
-        for c in comments:
-            if c.parent_id and c.parent_id in by_id:
-                by_id[c.parent_id].replies.append(c)
-            else:
-                roots.append(c)
-        _annotate_subtree_reply_counts(roots)
-        p.comment_roots = roots
+    _attach_comment_roots(feed_posts)
 
     return render(
         request,
         "posts/feed.html",
         {
-            "posts": page_obj.object_list,
+            "posts": feed_posts,
             "page_obj": page_obj,
             "paginator": paginator,
             "form": form,
@@ -202,7 +282,10 @@ def feed(request):
             "tags": Tag.objects.all(),
             "selected_category_ids": category_ids,
             "selected_tag_ids": tag_ids,
+            "following_only": following_only,
             "liked_comment_ids": liked_comment_ids,
+            "recommendation_meta": recommendation_meta,
+            "show_recommendations": show_recommendations,
         },
     )
 

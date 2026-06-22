@@ -87,3 +87,20 @@ class AiChatResponseSerializer(serializers.Serializer):
         child=serializers.DictField(),
         required=False,
     )
+
+
+class RecommendationItemSerializer(serializers.Serializer):
+    post_id = serializers.IntegerField()
+    title = serializers.CharField()
+    author = serializers.CharField()
+    category = serializers.CharField()
+    like_count = serializers.IntegerField()
+    reason = serializers.CharField()
+    source = serializers.CharField()
+
+
+class RecommendationsResponseSerializer(serializers.Serializer):
+    strategy = serializers.CharField()
+    collection_signals = serializers.IntegerField()
+    search_signals = serializers.IntegerField()
+    items = RecommendationItemSerializer(many=True)

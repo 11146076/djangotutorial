@@ -55,5 +55,7 @@ def ui_i18n(request):
             "prev_page": _("上一頁"),
             "next_page": _("下一頁"),
             "posts_found": _("關鍵字「{q}」共找到 {n} 篇貼文"),
+            "following_only_label": _("只看追蹤對象"),
+            "following_only_hint": _("勾選後僅顯示您追蹤的使用者貼文，不含您自己的貼文（仍套用搜尋與分類／標籤篩選）。"),
         }
     }

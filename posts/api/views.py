@@ -9,8 +9,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import AiChatMultipartSerializer, AiChatRequestSerializer, AiChatResponseSerializer
+from .serializers import (
+    AiChatMultipartSerializer,
+    AiChatRequestSerializer,
+    AiChatResponseSerializer,
+    RecommendationItemSerializer,
+    RecommendationsResponseSerializer,
+)
 from .services import run_ai_chat
+from posts.recommendations import get_personalized_recommendations
 
 logger = logging.getLogger(__name__)
 
@@ -52,3 +59,36 @@ class AiChatAPIView(APIView):
         )
         out = AiChatResponseSerializer(result)
         return Response(out.data, status=status.HTTP_200_OK)
+
+
+class RecommendationsAPIView(APIView):
+    """個人化貼文推薦（依收藏與搜尋紀錄）。"""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        limit = 10
+        try:
+            limit = max(1, min(20, int(request.GET.get("limit", "10"))))
+        except (TypeError, ValueError):
+            limit = 10
+
+        items, meta = get_personalized_recommendations(request.user, limit=limit)
+        payload = {
+            "strategy": meta.get("strategy", "none"),
+            "collection_signals": meta.get("collection_signals", 0),
+            "search_signals": meta.get("search_signals", 0),
+            "items": [
+                {
+                    "post_id": item.post.id,
+                    "title": item.post.title or "",
+                    "author": item.post.author.username,
+                    "category": item.post.category.name if item.post.category else "",
+                    "like_count": item.post.like_count,
+                    "reason": item.reason,
+                    "source": item.source,
+                }
+                for item in items
+            ],
+        }
+        return Response(RecommendationsResponseSerializer(payload).data, status=status.HTTP_200_OK)

@@ -58,7 +58,9 @@ class AIProviderError(Exception):
         self.transient = transient
 
 
-def _request_timeout() -> int:
+def _request_timeout(*, timeout_seconds: int | None = None) -> int:
+    if timeout_seconds is not None and timeout_seconds > 0:
+        return max(10, int(timeout_seconds))
     return max(10, int(getattr(settings, "AI_REQUEST_TIMEOUT_SECONDS", 60)))
 
 
@@ -68,11 +70,12 @@ def _http_post_json(
     headers: dict[str, str],
     *,
     provider: str,
+    timeout_seconds: int | None = None,
 ) -> dict[str, Any]:
     """POST JSON 並回傳解析後的 dict；記錄耗時與 payload 大小。"""
     body_bytes = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=body_bytes, headers=headers, method="POST")
-    timeout = _request_timeout()
+    timeout = _request_timeout(timeout_seconds=timeout_seconds)
     logger.debug(
         "%s request url=%s bytes=%d timeout=%ds",
         provider,
@@ -287,6 +290,7 @@ def call_nvidia_chat_completions(
     temperature: float = 0.4,
     top_p: float = 0.95,
     max_tokens: int = 200,
+    timeout_seconds: int | None = None,
 ) -> str:
     key = (api_key or "").strip()
     if not key:
@@ -321,7 +325,9 @@ def call_nvidia_chat_completions(
         return msg
 
     try:
-        data = _http_post_json(invoke_url, payload, headers, provider="nvidia")
+        data = _http_post_json(
+            invoke_url, payload, headers, provider="nvidia", timeout_seconds=timeout_seconds
+        )
         return _parse_response(data)
     except TimeoutError:
         raise AIProviderError(_("NVIDIA API 讀取回覆逾時（timeout），請稍後再試。"), transient=True)
@@ -330,7 +336,13 @@ def call_nvidia_chat_completions(
             logger.info("nvidia transient %s, retry once", exc.code)
             time.sleep(0.8)
             try:
-                data = _http_post_json(invoke_url, payload, headers, provider="nvidia-retry")
+                data = _http_post_json(
+                    invoke_url,
+                    payload,
+                    headers,
+                    provider="nvidia-retry",
+                    timeout_seconds=timeout_seconds,
+                )
                 return _parse_response(data)
             except Exception:
                 logger.exception("nvidia retry failed")
@@ -393,7 +405,13 @@ def _build_gemini_contents(
     return contents
 
 
-def call_gemini_generate(contents: list[dict[str, Any]], *, model: str, api_key: str) -> str:
+def call_gemini_generate(
+    contents: list[dict[str, Any]],
+    *,
+    model: str,
+    api_key: str,
+    timeout_seconds: int | None = None,
+) -> str:
     key = (api_key or "").strip()
     if not key:
         raise AIProviderError(_("缺少 Gemini API Key：請在 `.env` 設定 `GEMINI_API_KEY`。"), transient=False)
@@ -407,7 +425,7 @@ def call_gemini_generate(contents: list[dict[str, Any]], *, model: str, api_key:
     headers = {"Content-Type": "application/json", "x-goog-api-key": key}
 
     try:
-        data = _http_post_json(url, body, headers, provider="gemini")
+        data = _http_post_json(url, body, headers, provider="gemini", timeout_seconds=timeout_seconds)
         candidates = data.get("candidates") or []
         if not candidates:
             raise AIProviderError(_("Gemini 沒有回傳候選回覆，請稍後再試。"), transient=True)

@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import AiChatAPIView
+from .views import AiChatAPIView, RecommendationsAPIView
 from .viewsets import CategoryViewSet, PostViewSet, TagViewSet
 
 app_name = "posts_api"
@@ -13,5 +13,6 @@ router.register("tags", TagViewSet, basename="tag")
 
 urlpatterns = [
     path("ai-chat/", AiChatAPIView.as_view(), name="ai_chat"),
+    path("recommendations/", RecommendationsAPIView.as_view(), name="recommendations"),
     path("", include(router.urls)),
 ]
