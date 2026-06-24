@@ -231,6 +231,12 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/v1",
     "TAGS": [
         {"name": "AI Chat", "description": "AI 美食助理對話 API"},
+        {"name": "Posts", "description": "貼文 CRUD、按讚、收藏"},
+        {"name": "Comments", "description": "留言 CRUD、按讚"},
+        {"name": "Notifications", "description": "通知中心"},
+        {"name": "Collections", "description": "我的收藏"},
+        {"name": "Taxonomy", "description": "分類與標籤（管理員可寫入）"},
+        {"name": "Users", "description": "使用者檔案、追蹤"},
     ],
 }
 

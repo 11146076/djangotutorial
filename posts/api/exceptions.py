@@ -11,7 +11,7 @@ def api_exception_handler(exc, context):
         return None
 
     if response.status_code == 401:
-        response.data = {"error": _("請先登入後再使用 AI 小幫手。")}
+        response.data = {"error": _("請先登入。")}
         return response
 
     data = response.data

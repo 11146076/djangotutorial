@@ -16,9 +16,20 @@ class ApiSchemaTests(SimpleTestCase):
         self.assertEqual(reverse("swagger-ui"), "/api/docs/")
         self.assertEqual(reverse("redoc"), "/api/redoc/")
 
-    def test_openapi_schema_documents_ai_chat_endpoint(self):
+    def test_openapi_schema_documents_core_endpoints(self):
         response = self.client.get(reverse("schema"))
         content = response.content.decode()
 
-        self.assertIn("/api/v1/ai-chat/", content)
-        self.assertIn("AI 美食助理對話", content)
+        endpoints = [
+            "/api/v1/ai-chat/",
+            "/api/v1/posts/",
+            "/api/v1/comments/",
+            "/api/v1/notifications/",
+            "/api/v1/collections/",
+            "/api/v1/categories/",
+            "/api/v1/tags/",
+            "/api/v1/users/",
+        ]
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint):
+                self.assertIn(endpoint, content)
