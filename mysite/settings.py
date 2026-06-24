@@ -83,6 +83,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'mysite.context_processors.wheel_tags',
+                'mysite.context_processors.unread_notifications',
             ],
         },
     },

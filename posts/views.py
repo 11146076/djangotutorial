@@ -24,11 +24,13 @@ from .models import (
     Collection,
     CommentLike,
     Like,
+    Notification,
     Post,
     PostComment,
     SearchLog,
     Tag,
 )
+from .notifications import notify_followers_new_post, notify_post_commented, notify_post_liked
 from .tasks import analyze_post_health_task
 
 
@@ -95,6 +97,7 @@ def feed(request):
             post.save()
             form.instance = post
             form.save_m2m()
+            notify_followers_new_post(post)
             try:
                 analyze_post_health_task.delay(post.id)
             except AttributeError:
@@ -233,7 +236,9 @@ def like_toggle(request, pk):
             messages.info(request, "已取消按讚。")
     else:
         # 未按讚 → 建立 Like（get_or_create 避免重複鍵錯誤）
-        Like.objects.get_or_create(user=request.user, post=post)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
+        if created:
+            notify_post_liked(like)
         liked = True
         if not wants_json:
             messages.success(request, "已按讚。")
@@ -370,6 +375,7 @@ def comment_create(request, pk):
     else:
         comment.root_id = comment.id
     comment.save(update_fields=["root"])
+    notify_post_commented(comment)
 
     if wants_json:
         comment = PostComment.objects.select_related("author", "author__profile").get(pk=comment.pk)
@@ -609,4 +615,48 @@ def collections_list(request):
             "paginator": paginator,
         },
     )
+
+
+@login_required(login_url=settings.LOGIN_URL)
+def notifications_list(request):
+    notifications = (
+        Notification.objects.filter(recipient=request.user)
+        .select_related("actor", "post", "comment")
+        .order_by("-created_at", "-id")
+    )
+    paginator = Paginator(notifications, 20)
+    page_obj = paginator.get_page((request.GET.get("page") or "").strip() or 1)
+    return render(
+        request,
+        "posts/notifications.html",
+        {
+            "notifications": page_obj.object_list,
+            "page_obj": page_obj,
+            "paginator": paginator,
+        },
+    )
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@require_POST
+def notification_mark_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
+    notification.mark_read()
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect(notification.target_url())
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@require_POST
+def notifications_mark_all_read(request):
+    Notification.objects.filter(recipient=request.user, is_read=False).update(
+        is_read=True,
+        read_at=timezone.now(),
+    )
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+    return redirect("posts:notifications_list")
 

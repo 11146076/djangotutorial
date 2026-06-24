@@ -9,4 +9,5 @@ from .follow import Follow
 from .collection import Collection
 from .ai_chat_log import AiChatLog
 from .post_health_insight import PostHealthInsight
+from .notification import Notification
 from . import signals  # noqa: F401
