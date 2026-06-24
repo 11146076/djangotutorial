@@ -280,4 +280,34 @@ def get_today_meal_recommendations(user, *, limit: int = 3) -> list[MealRecommen
         )
 
     recommendations.sort(key=lambda rec: (rec.score, rec.post.created_at, rec.post.id), reverse=True)
-    return recommendations[:limit]
+    picked = recommendations[:limit]
+
+    if len(picked) < limit:
+        already_ids = {rec.post.id for rec in picked}
+        filler_posts = (
+            Post.objects.filter(visibility=Post.VISIBILITY_PUBLIC)
+            .exclude(id__in=already_ids)
+            .select_related("author", "author__profile", "category", "latest_health_insight")
+            .prefetch_related("tags")
+            .annotate(
+                comment_count=Count("post_comments", distinct=True),
+                collection_count=Count("collections", distinct=True),
+            )
+            .order_by("-like_count", "-created_at", "-id")[: limit - len(picked)]
+        )
+        for post in filler_posts:
+            score, reasons = _score_post(post, profile)
+            badges = []
+            if post.category:
+                badges.append(post.category.name)
+            badges.extend(f"#{tag.name}" for tag in post.tags.all()[:2])
+            picked.append(
+                MealRecommendation(
+                    post=post,
+                    reason="；".join(reasons[:2]) if reasons else "熱門公開貼文推薦",
+                    badges=tuple(badges[:3]),
+                    score=score,
+                )
+            )
+
+    return picked[:limit]
