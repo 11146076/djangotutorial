@@ -91,6 +91,15 @@ class TodayMealRecommendationTests(TestCase):
         self.assertContains(response, "今天吃什麼？")
         self.assertContains(response, recommended.title)
 
+    def test_recommendations_backfill_when_only_own_posts_exist(self):
+        own_a = self._post(title="我的早餐", author=self.user, category=self.noodle_category)
+        own_b = self._post(title="我的午餐", author=self.user, category=self.noodle_category, likes=3)
+
+        recommendations = get_today_meal_recommendations(self.user, limit=3)
+
+        self.assertGreaterEqual(len(recommendations), 2)
+        self.assertIn(own_b, [rec.post for rec in recommendations])
+
 
 class RecommendationHelperTests(TestCase):
     def test_extract_bold_terms(self):
