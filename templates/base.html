@@ -315,7 +315,7 @@
 <body
   class="saas-theme flex min-h-dvh flex-col antialiased pb-[env(safe-area-inset-bottom)]"
   data-feed-list-url="{% url 'posts:feed' %}"
-  {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts:ai_chat' %}"{% endif %}
+  {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts_api:ai_chat' %}"{% endif %}
 >
   {{ wheel_tag_items|json_script:"wheel-tag-items" }}
   <nav class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-800 shadow-sm backdrop-blur-md" x-data="{ open: false }" @keydown.window.escape="open = false">

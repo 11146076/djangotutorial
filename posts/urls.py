@@ -1,12 +1,10 @@
 from django.urls import path
 
 from . import views
-from .api.views import AiChatAPIView
 
 app_name = "posts"
 
 urlpatterns = [
-    path("ai-chat/", AiChatAPIView.as_view(), name="ai_chat"),
     path("", views.feed, name="feed"),
     path("collections/", views.collections_list, name="collections_list"),
     path("notifications/", views.notifications_list, name="notifications_list"),

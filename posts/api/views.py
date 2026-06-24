@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from django.utils.translation import gettext as _
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +15,47 @@ from .services import run_ai_chat
 logger = logging.getLogger(__name__)
 
 
+@extend_schema(
+    tags=["AI Chat"],
+    summary="AI 美食助理對話",
+    description=(
+        "送出文字或圖片給 AI 美食助理，取得回覆與可選的站內推薦建議。\n\n"
+        "支援兩種 Content-Type：\n"
+        "- `application/json`：可附 `image_base64`（data URL 或純 base64）\n"
+        "- `multipart/form-data`：可附 `image` 檔案欄位\n\n"
+        "需先登入（SessionAuthentication）。"
+    ),
+    request={
+        "application/json": AiChatRequestSerializer,
+        "multipart/form-data": AiChatMultipartSerializer,
+    },
+    responses={200: AiChatResponseSerializer},
+    examples=[
+        OpenApiExample(
+            "JSON 文字提問",
+            value={
+                "message": "今晚想吃清淡一點，有什麼推薦？",
+                "history": [
+                    {"role": "user", "content": "你好"},
+                    {"role": "assistant", "content": "你好！想吃什么类型的料理？"},
+                ],
+            },
+            request_only=True,
+            media_type="application/json",
+        ),
+        OpenApiExample(
+            "成功回應",
+            value={
+                "reply": "可以試試 **蔬菜湯麵** 或清蒸魚，口味清爽。",
+                "suggestions": [
+                    {"type": "search", "name": "蔬菜湯麵", "query": "蔬菜湯麵"},
+                ],
+            },
+            response_only=True,
+            status_codes=["200"],
+        ),
+    ],
+)
 class AiChatAPIView(APIView):
     """
     AI 美食助理 API（DRF）。

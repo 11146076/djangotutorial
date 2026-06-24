@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "captcha",
 ]
 
@@ -213,12 +214,25 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "EXCEPTION_HANDLER": "posts.api.exceptions.api_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
         "rest_framework.renderers.BrowsableAPIRenderer"
     )
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "等等吃啥 API",
+    "DESCRIPTION": "等等吃啥（EatWhat）後端 API 文件。目前提供 AI 美食助理等 DRF 端點。",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "TAGS": [
+        {"name": "AI Chat", "description": "AI 美食助理對話 API"},
+    ],
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

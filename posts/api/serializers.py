@@ -81,9 +81,17 @@ class AiChatMultipartSerializer(serializers.Serializer):
         return attrs
 
 
+class PostSuggestionSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=("tag", "search"))
+    name = serializers.CharField()
+    id = serializers.IntegerField(required=False)
+    query = serializers.CharField(required=False)
+
+
 class AiChatResponseSerializer(serializers.Serializer):
-    reply = serializers.CharField()
-    suggestions = serializers.ListField(
-        child=serializers.DictField(),
+    reply = serializers.CharField(help_text="AI 助理回覆文字（可能含 Markdown）。")
+    suggestions = PostSuggestionSerializer(
+        many=True,
         required=False,
+        help_text="依回覆內容推薦的站內標籤或搜尋關鍵字。",
     )
