@@ -313,7 +313,7 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body
-  class="saas-theme min-h-dvh antialiased pb-[env(safe-area-inset-bottom)]{% if not user.is_authenticated %} flex flex-col{% endif %}"
+  class="saas-theme flex min-h-dvh flex-col antialiased pb-[env(safe-area-inset-bottom)]"
   data-feed-list-url="{% url 'posts:feed' %}"
   {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts:ai_chat' %}"{% endif %}
 >
@@ -507,7 +507,7 @@
   {% include "partials/food_ai_assistant.html" %}
   {% endif %}
 
-  <main class="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6{% if not user.is_authenticated %} flex-1{% endif %}">
+  <main class="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-4 sm:py-6">
     {% if messages %}
       {% for message in messages %}
         <div class="saas-card mb-4 px-4 py-3 text-sm sm:text-base">
