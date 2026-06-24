@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}社群帳號登入 - 等等吃啥{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+  <div class="saas-card p-6 sm:p-8">
+    <div class="mb-6 text-center">
+      <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-teal text-2xl text-white shadow-saas">🍽</span>
+      {% if process == "connect" %}
+      <h1 class="mt-4 text-xl font-bold text-brand-teal sm:text-2xl">連結 {{ provider.name }}</h1>
+      <p class="mt-1 text-sm text-slate-500">即將連結你的 {{ provider.name }} 帳號到此網站。</p>
+      {% else %}
+      <h1 class="mt-4 text-xl font-bold text-brand-teal sm:text-2xl">使用 {{ provider.name }} 登入</h1>
+      <p class="mt-1 text-sm text-slate-500">即將透過 {{ provider.name }} 帳號登入等等吃啥。</p>
+      {% endif %}
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <button type="submit" class="saas-btn-primary w-full">繼續</button>
+    </form>
+
+    <p class="mt-5 text-center text-sm text-slate-500">
+      <a class="font-semibold text-brand-teal-soft hover:text-brand-teal hover:underline" href="{% url 'accounts:login' %}">返回登入頁</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

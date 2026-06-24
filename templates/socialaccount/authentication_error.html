@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}社群登入失敗 - 等等吃啥{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+  <div class="saas-card p-6 sm:p-8">
+    <div class="mb-6 text-center">
+      <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-2xl text-rose-600 shadow-saas">!</span>
+      <h1 class="mt-4 text-xl font-bold text-brand-teal sm:text-2xl">社群登入失敗</h1>
+      <p class="mt-1 text-sm text-slate-500">使用第三方帳號登入時發生錯誤，請稍後再試。</p>
+    </div>
+
+    <a href="{% url 'accounts:login' %}" class="saas-btn-primary flex w-full items-center justify-center">返回登入頁</a>
+  </div>
+</div>
+{% endblock %}

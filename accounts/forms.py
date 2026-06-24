@@ -7,6 +7,8 @@ from django.contrib.auth.forms import (
     UsernameField,
 )
 
+from allauth.socialaccount.forms import SignupForm as AllauthSocialSignupForm
+
 from .forms_security import AuthSecurityFieldsMixin
 from .models import Profile
 
@@ -88,6 +90,20 @@ class UsernameOrEmailAuthenticationForm(AuthSecurityFieldsMixin, AuthenticationF
                 raise self.get_invalid_login_error()
             self.confirm_login_allowed(self.user_cache)
         return self.cleaned_data
+
+
+class SocialSignupForm(AllauthSocialSignupForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "username" in self.fields:
+            self.fields["username"].label = "帳號"
+            self.fields["username"].widget.attrs.setdefault("class", _SAAS_INPUT_CLASS)
+        if "email" in self.fields:
+            self.fields["email"].label = "Email"
+            self.fields["email"].widget.attrs.setdefault("class", _SAAS_INPUT_CLASS)
+        if "email2" in self.fields:
+            self.fields["email2"].label = "確認 Email"
+            self.fields["email2"].widget.attrs.setdefault("class", _SAAS_INPUT_CLASS)
 
 
 class ProfileEditForm(forms.ModelForm):

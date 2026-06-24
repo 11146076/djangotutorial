@@ -1,5 +1,16 @@
-from django.test import TestCase
+from django.template.loader import get_template
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
+
+
+class SocialSignupTemplateTests(SimpleTestCase):
+    def test_social_signup_template_extends_site_base(self):
+        template = get_template("socialaccount/signup.html")
+        source = template.template.source
+
+        self.assertIn('extends "base.html"', source)
+        self.assertIn("saas-card", source)
+        self.assertIn("完成註冊", source)
 
 
 class AuthTemplateTests(TestCase):
