@@ -31,6 +31,7 @@ from .models import (
     Tag,
 )
 from .notifications import notify_followers_new_post, notify_post_commented, notify_post_liked
+from .recommendations import get_today_meal_recommendations
 from .tasks import analyze_post_health_task
 
 
@@ -188,6 +189,17 @@ def feed(request):
         _annotate_subtree_reply_counts(roots)
         p.comment_roots = roots
 
+    show_recommendations = (
+        request.user.is_authenticated
+        and not search_query
+        and not category_ids
+        and not tag_ids
+        and (not page_number or page_number == "1")
+    )
+    today_meal_recommendations = (
+        get_today_meal_recommendations(request.user, limit=3) if show_recommendations else []
+    )
+
     return render(
         request,
         "posts/feed.html",
@@ -203,6 +215,7 @@ def feed(request):
             "selected_category_ids": category_ids,
             "selected_tag_ids": tag_ids,
             "liked_comment_ids": liked_comment_ids,
+            "today_meal_recommendations": today_meal_recommendations,
         },
     )
 
