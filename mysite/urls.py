@@ -25,6 +25,7 @@ urlpatterns = [
     path("captcha/", include("captcha.urls")),
     path("api/v1/", include("posts.api.urls")),
     path("ckeditor/", include("mysite.ckeditor_urls")),
+    path("oauth/", include("allauth.urls")),
     path("accounts/", include("accounts.urls")),
     path("", include("posts.urls")),
 ]
