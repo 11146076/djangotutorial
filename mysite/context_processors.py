@@ -1,6 +1,6 @@
 from django.db.models import Count
 
-from posts.models import Tag
+from posts.models import Notification, Tag
 
 
 def wheel_tags(request):
@@ -12,3 +12,14 @@ def wheel_tags(request):
         .values("id", "name")
     )
     return {"wheel_tag_items": items}
+
+
+def unread_notifications(request):
+    if not request.user.is_authenticated:
+        return {"unread_notifications_count": 0}
+    return {
+        "unread_notifications_count": Notification.objects.filter(
+            recipient=request.user,
+            is_read=False,
+        ).count()
+    }

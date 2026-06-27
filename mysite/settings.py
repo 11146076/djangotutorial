@@ -49,13 +49,19 @@ INSTALLED_APPS = [
     "js_asset",
     "ckeditor",
     "ckeditor_uploader",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sites",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "captcha",
 ]
 
@@ -67,6 +73,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'accounts.middleware.ApiKeyAuthMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -86,6 +93,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'mysite.context_processors.wheel_tags',
                 'mysite.ui_i18n.ui_i18n',
+                'mysite.context_processors.unread_notifications',
             ],
         },
     },
@@ -268,6 +276,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "posts.api.exceptions.api_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 if DEBUG:
@@ -287,6 +296,24 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "等吃啥 API",
+    "DESCRIPTION": "等吃啥（EatWhat）REST API：貼文、AI 美食助手與 DRF 端點",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "TAGS": [
+        {"name": "AI Chat", "description": "AI 美食助手對話 API"},
+        {"name": "Posts", "description": "貼文 CRUD、按讚、收藏"},
+        {"name": "Comments", "description": "留言 CRUD、按讚"},
+        {"name": "Notifications", "description": "通知中心"},
+        {"name": "Collections", "description": "收藏清單"},
+        {"name": "Taxonomy", "description": "分類與標籤（管理員可寫入）"},
+        {"name": "Users", "description": "使用者檔案、追蹤"},
+    ],
+}
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
@@ -301,14 +328,44 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'
+SITE_ID = int(os.environ.get("SITE_ID", "1").strip() or "1")
 
 AUTHENTICATION_BACKENDS = [
     "accounts.auth_backends.EmailUsernameModelBackend",
     "accounts.auth_backends.ApiKeyBackend",
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'posts:feed'
+
+ACCOUNT_EMAIL_VERIFICATION = os.environ.get("ACCOUNT_EMAIL_VERIFICATION", "none").strip()
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_UNIQUE_EMAIL = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_STORE_TOKENS = False
+SOCIALACCOUNT_FORMS = {
+    "signup": "accounts.forms.SocialSignupForm",
+}
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID", "").strip(),
+            "secret": os.environ.get("GOOGLE_CLIENT_SECRET", "").strip(),
+            "key": "",
+        },
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+    }
+}
 
 # django-simple-captcha（登入／註冊圖片驗證碼）
 CAPTCHA_LENGTH = 5

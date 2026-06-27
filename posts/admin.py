@@ -17,6 +17,7 @@ from .models import (
     CommentLike,
     Follow,
     Like,
+    Notification,
     Post,
     PostComment,
     PostHealthInsight,
@@ -278,6 +279,17 @@ class SearchLogAdmin(admin.ModelAdmin):
     show_full_result_count = False
 
 
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("id", "recipient", "actor", "notification_type", "post", "is_read", "created_at")
+    list_filter = ("notification_type", "is_read", "created_at")
+    search_fields = ("recipient__username", "recipient__email", "actor__username", "actor__email", "post__title")
+    autocomplete_fields = ("recipient", "actor", "post", "comment")
+    ordering = ("-created_at",)
+    list_select_related = ("recipient", "actor", "post", "comment")
+    readonly_fields = ("created_at", "read_at")
+    show_full_result_count = False
+
+
 class AiChatLogAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -388,5 +400,6 @@ eatwhat_admin.register(Like, LikeAdmin)
 eatwhat_admin.register(Follow, FollowAdmin)
 eatwhat_admin.register(Collection, CollectionAdmin)
 eatwhat_admin.register(SearchLog, SearchLogAdmin)
+eatwhat_admin.register(Notification, NotificationAdmin)
 eatwhat_admin.register(AiChatLog, AiChatLogAdmin)
 eatwhat_admin.register(PostHealthInsight, PostHealthInsightAdmin)

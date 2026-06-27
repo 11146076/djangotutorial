@@ -18,6 +18,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 from django.views.i18n import set_language
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from mysite.admin_site import eatwhat_admin
 
@@ -25,9 +26,13 @@ urlpatterns = [
     path("i18n/setlang/", set_language, name="set_language"),
     path("admin/", eatwhat_admin.urls),
     path("captcha/", include("captcha.urls")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path("api/v1/", include("posts.api.urls")),
     path("api/v1/auth/", include("accounts.api_urls")),
     path("ckeditor/", include("mysite.ckeditor_urls")),
+    path("oauth/", include("allauth.urls")),
     path("accounts/", include("accounts.urls")),
     path("", include("posts.urls")),
 ]

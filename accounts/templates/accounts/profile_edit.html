@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}
 
 {% block title %}編輯檔案 - 社群網站{% endblock %}
 
@@ -25,6 +26,32 @@
             <a href="{% url 'accounts:profile_detail' user.username %}" class="flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-center font-medium text-slate-700 hover:bg-slate-50 sm:w-auto">取消</a>
           </div>
         </form>
+
+        <div class="mt-8 border-t border-slate-200 pt-6">
+          <h2 class="text-base font-semibold text-slate-800">社群帳號</h2>
+          {% get_social_accounts user as social_accounts %}
+          {% if social_accounts.google %}
+          <p class="mt-2 text-sm text-slate-500">
+            已連結 Google：
+            <span class="font-medium text-slate-700">{{ social_accounts.google.0.get_provider_account }}</span>
+          </p>
+          <a
+            href="{% url 'socialaccount_connections' %}"
+            class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            管理社群帳號連結
+          </a>
+          {% else %}
+          <p class="mt-2 text-sm text-slate-500">連結 Google 後，可直接用 Google 登入此帳號。</p>
+          <a
+            href="{% provider_login_url 'google' process='connect' %}"
+            class="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            <i class="fa-brands fa-google text-base text-red-500" aria-hidden="true"></i>
+            連結 Google 帳號
+          </a>
+          {% endif %}
+        </div>
   </div>
 </div>
 {% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+
+{% block title %}社群帳號連結 - 等等吃啥{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+  <div class="saas-card p-6 sm:p-8">
+    <div class="mb-6 text-center">
+      <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-teal text-2xl text-white shadow-saas">🍽</span>
+      <h1 class="mt-4 text-xl font-bold text-brand-teal sm:text-2xl">社群帳號連結</h1>
+      <p class="mt-1 text-sm text-slate-500">管理已連結的第三方帳號，或新增 Google 登入方式。</p>
+    </div>
+
+    {% get_social_accounts user as social_accounts %}
+    {% if social_accounts %}
+    <div class="mb-6">
+      <h2 class="mb-3 text-sm font-semibold text-slate-700">已連結的帳號</h2>
+      <form method="post" action="{% url 'socialaccount_connections' %}" class="space-y-4">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
+          {{ form.non_field_errors.0 }}
+        </div>
+        {% endif %}
+        <div class="space-y-2">
+          {% for provider_name, provider_accounts in social_accounts.items %}
+            {% for account in provider_accounts %}
+            <label
+              for="id_account_{{ account.pk }}"
+              class="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 transition hover:border-slate-300"
+            >
+              <input
+                type="radio"
+                name="account"
+                id="id_account_{{ account.pk }}"
+                value="{{ account.pk }}"
+                class="h-4 w-4 border-slate-300 text-brand-teal-soft focus:ring-brand-teal-soft"
+                required
+              >
+              <span class="flex min-w-0 flex-1 items-center gap-2">
+                {% if provider_name == "google" %}
+                <i class="fa-brands fa-google text-base text-red-500" aria-hidden="true"></i>
+                {% endif %}
+                <span class="truncate text-sm font-medium text-slate-700">{{ account.get_provider_account }}</span>
+              </span>
+            </label>
+            {% endfor %}
+          {% endfor %}
+        </div>
+        <button
+          type="submit"
+          class="flex min-h-11 w-full items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+        >
+          解除選取的連結
+        </button>
+      </form>
+    </div>
+    {% else %}
+    <div class="mb-6 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+      尚未連結任何第三方帳號。
+    </div>
+    {% endif %}
+
+    <div class="my-5 flex items-center gap-3">
+      <div class="h-px flex-1 bg-slate-200"></div>
+      <span class="text-xs font-medium text-slate-400">新增連結</span>
+      <div class="h-px flex-1 bg-slate-200"></div>
+    </div>
+
+    <a
+      href="{% provider_login_url 'google' process='connect' %}"
+      class="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+    >
+      <i class="fa-brands fa-google text-base text-red-500" aria-hidden="true"></i>
+      連結 Google 帳號
+    </a>
+
+    <p class="mt-5 text-center text-sm text-slate-500">
+      <a class="font-semibold text-brand-teal-soft hover:text-brand-teal hover:underline" href="{% url 'accounts:profile_edit' %}">返回編輯檔案</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

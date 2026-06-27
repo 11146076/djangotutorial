@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}通知 - 等等吃啥{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl">
+  <div class="mb-4 rounded-xl bg-white p-4 shadow sm:p-5">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div class="min-w-0">
+        <h1 class="truncate text-lg font-semibold sm:text-xl">通知</h1>
+        <p class="mt-1 text-sm text-slate-500">查看貼文按讚、留言，以及追蹤者的新貼文。</p>
+      </div>
+      <div class="flex shrink-0 flex-wrap gap-2">
+        {% if unread_notifications_count %}
+          <form method="post" action="{% url 'posts:notifications_mark_all_read' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">全部標為已讀</button>
+          </form>
+        {% endif %}
+        <a href="{% url 'posts:feed' %}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">回首頁</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    {% for notification in notifications %}
+      <article class="rounded-xl border bg-white p-4 shadow-sm {% if notification.is_read %}border-slate-100{% else %}border-sky-200 ring-1 ring-sky-100{% endif %}">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <a href="{{ notification.target_url }}" class="min-w-0 flex-1">
+            <div class="flex items-start gap-3">
+              <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full {% if notification.is_read %}bg-slate-100 text-slate-500{% else %}bg-sky-100 text-sky-700{% endif %}">
+                {% if notification.notification_type == "post_liked" %}
+                  <i class="fa-solid fa-thumbs-up" aria-hidden="true"></i>
+                {% elif notification.notification_type == "post_commented" or notification.notification_type == "comment_replied" %}
+                  <i class="fa-solid fa-message" aria-hidden="true"></i>
+                {% else %}
+                  <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                {% endif %}
+              </div>
+              <div class="min-w-0">
+                <p class="break-words text-sm font-medium text-slate-800">{{ notification.message }}</p>
+                {% if notification.post %}
+                  <p class="mt-1 truncate text-xs text-slate-500">貼文：{{ notification.post.title|default:"（無標題）" }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-slate-400">{{ notification.created_at|timesince }} 前</p>
+              </div>
+            </div>
+          </a>
+          {% if not notification.is_read %}
+            <form method="post" action="{% url 'posts:notification_mark_read' notification.pk %}" class="shrink-0">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50">標為已讀</button>
+            </form>
+          {% endif %}
+        </div>
+      </article>
+    {% empty %}
+      <div class="rounded-xl bg-white px-6 py-10 text-center text-slate-500 shadow sm:px-10 sm:py-12">
+        <p class="text-sm sm:text-base">目前沒有通知。</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-6 flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm shadow sm:px-5">
+      <div class="text-slate-500">第 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} 頁</div>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a class="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50" href="?page={{ page_obj.previous_page_number }}">上一頁</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a class="rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 hover:bg-slate-50" href="?page={{ page_obj.next_page_number }}">下一頁</a>
+        {% endif %}
+      </div>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

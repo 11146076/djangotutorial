@@ -1,7 +1,9 @@
 ﻿# 🍴 等等吃啥（EatWhat）
 
-美食社群平台：發文、看文、用分類/標籤找靈感，並可按讚、留言、收藏、追蹤。  
-目前已加入 **健康達人模式**：可在貼文上顯示 AI 估算熱量、A-D 健康等級與一句話短評。
+美食社群平台：發文、互動、搜尋靈感，並整合 **AI 美食助理**、**健康達人模式**、**個人化推薦**、**通知中心**、**Google OAuth** 與 **RESTful API（Swagger）**。
+
+- **GitHub（繳交用）**：<https://github.com/11146076/djangotutorial>（`main` 分支）
+- **本機開發**：WSL Ubuntu + Apache + MariaDB，或 `runserver` 快速開發
 
 ---
 
@@ -9,98 +11,66 @@
 
 | 模組 | 說明 | 狀態 |
 | --- | --- | :---: |
-| 會員 | 註冊、登入/登出、個人檔案（頭像、簡介、飲食偏好） | 已完成 |
-| 貼文 | 富文字發文、最多 3 張圖、公開/私密、動態牆、單篇瀏覽 | 已完成 |
-| 互動 | 按讚、留言/回覆、留言按讚、收藏、追蹤 | 已完成 |
-| 搜尋篩選 | 關鍵字、分類多選、標籤多選、搜尋紀錄 | 已完成 |
-| AI 助理 | 美食對話助手（文字/圖片） | 已完成 |
-| 健康達人 | AI 健康分析 + 卡片/詳情頁對話框顯示 | 已完成 |
-| 後台管理 | 會員/貼文/留言/分類/標籤、CSV 匯出、重算讚數 | 已完成 |
+| 會員 | 註冊、登入/登出、CAPTCHA、個人檔案（頭像、簡介、飲食偏好） |
+| Google OAuth | 第三方登入、個人頁連結/解除 Google 帳號 |
+| 貼文 | 富文字發文、最多 3 張圖、公開/私密、動態牆、單篇瀏覽 |
+| 互動 | 按讚、留言/回覆、留言按讚、收藏、追蹤 |
+| 搜尋篩選 | 關鍵字、分類多選、標籤多選、搜尋紀錄 |
+| 個人化推薦 | 首頁「今天吃什麼？」Top 3 美食靈感 |
+| 通知中心 | 按讚、留言、回覆、追蹤者發文等站內通知 |
+| AI 助理 | 美食對話助手（文字/圖片），浮動視窗 |
+| 健康達人 | AI 健康分析 + 動態牆/詳情頁對話框顯示 |
+| REST API | DRF ViewSets + OpenAPI（Swagger / ReDoc） |
+| 後台管理 | 會員/貼文/留言/分類/標籤、CSV 匯出、重算讚數 |
 
 ---
 
-## 健康達人模式（本次重點）
+## 重要網址（本機 Apache）
 
-- 發文後由背景任務觸發 AI 分析（非同步，避免發文等待）
-- 儲存於 `post_health_insights`（關聯表）
-- `posts.latest_health_insight` 作為前端快速讀取入口
-- 前端可一鍵切換健康模式，顯示 AI 對話氣泡
-
-### 分析欄位
-
-- `calories`：熱量估算（kcal）
-- `health_rank`：健康等級（A/B/C/D）
-- `reason`：一句話短評
-- `status`：`pending` / `completed` / `failed`
-
----
-
-## 技術棧
-
-- **後端**：Django 5.x（Python）
-- **資料庫**：MariaDB
-- **快取/任務佇列**：Redis + Celery
-- **畫面**：Django Template + Tailwind + Alpine.js（部分互動）
-- **編輯器**：django-ckeditor
-- **後台匯出**：django-import-export
+| 功能 | 路徑 |
+| --- | --- |
+| 動態牆（含推薦） | `/` |
+| 登入 / 註冊 | `/accounts/login/`、`/accounts/register/` |
+| Google OAuth | `/oauth/` |
+| 通知中心 | `/notifications/` |
+| 收藏列表 | `/collections/` |
+| 個人頁 | `/@<username>/` |
+| 個人檔案編輯 | `/accounts/profile/edit/` |
+| Swagger API 文件 | `/api/docs/` |
+| ReDoc API 文件 | `/api/redoc/` |
+| OpenAPI Schema | `/api/schema/` |
+| REST API v1 | `/api/v1/` |
+| AI Chat API | `/api/v1/ai-chat/` |
+| Django 後台 | `/admin/` |
 
 ---
 
-## 本機開發
+## 個人化推薦（今天吃什麼？）
 
-### 1) 安裝套件
+登入後於首頁（無搜尋/分類/標籤篩選、第 1 頁）顯示 **3 篇推薦貼文**。
 
-```powershell
-pip install -r requirements.txt
-```
+排序依據：收藏、按讚、自己的發文、搜尋紀錄、飲食偏好、追蹤對象、健康等級與互動熱度。若個人化候選不足，會以熱門公開貼文補滿 3 篇。
 
-### 2) 設定資料庫與環境變數
-
-- 建立 DB：`eat_what`
-- `.env` 至少需包含 DB 連線資訊、AI key（若要啟用 AI）
-- Celery/Redis 可用預設值：
-  - `CELERY_BROKER_URL=redis://127.0.0.1:6379/0`
-  - `CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1`
-
-### 3) 套用 migration
-
-```powershell
-python manage.py migrate
-```
-
-### 4) 建立管理員（可選）
-
-```powershell
-python manage.py createsuperuser
-```
-
-### 5) 啟動服務
-
-**終端 A（Celery）**
-```powershell
-celery -A mysite worker -l info -P solo
-```
-
-
-**終端 B（Django）**
-```powershell
-python manage.py runserver
-```
+相關程式：`posts/recommendations.py`、`posts/templates/posts/feed.html`
 
 ---
 
-## 舊貼文健康分析回填
+## 健康達人模式
 
-已提供管理指令可一次補跑歷史貼文：
+- 發文後由 Celery 背景任務觸發 AI 分析（非同步）
+- 資料表：`post_health_insights`；前端透過 `posts.latest_health_insight` 讀取
+- 動態牆可一鍵切換健康模式，顯示熱量、A–D 等級與短評氣泡
 
-```powershell
-python manage.py backfill_health_insights
-```
+| 欄位 | 說明 |
+| --- | --- |
+| `calories` | 熱量估算（kcal） |
+| `health_rank` | 健康等級（A / B / C / D） |
+| `reason` | 一句話短評 |
+| `status` | `pending` / `completed` / `failed` |
 
-- 預設：丟進 Celery 非同步處理
-- 若要同步執行：
+歷史貼文回填：
 
-```powershell
+```bash
 python manage.py backfill_health_insights --sync
 ```
 
@@ -124,5 +94,13 @@ python manage.py backfill_health_insights --sync
 
 ## 安全與注意事項
 
-- `.env`、API key、資料庫密碼請勿提交到 Git。
-- 本專案使用 `django-ckeditor`（CKEditor 4），若上線建議評估升級方案。
+- `.env`、API Key、資料庫密碼、GitHub PAT **請勿**提交到 Git
+- `DEBUG=true` 僅供開發；上線請關閉並設定 `ALLOWED_HOSTS`
+- 本專案使用 `django-ckeditor`（CKEditor 4），上線前建議評估升級方案
+- Google OAuth 需在 Google Cloud Console 設定正確的 Redirect URI
+
+---
+
+## 授權
+
+本專題為課程作業用途；原始教學基底來自 Django Tutorial，並擴充為 EatWhat 美食社群平台。

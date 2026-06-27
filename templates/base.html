@@ -313,9 +313,9 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body
-  class="saas-theme min-h-dvh antialiased pb-[env(safe-area-inset-bottom)]{% if not user.is_authenticated %} flex flex-col{% endif %}"
+  class="saas-theme flex min-h-dvh flex-col antialiased pb-[env(safe-area-inset-bottom)]"
   data-feed-list-url="{% url 'posts:feed' %}"
-  {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts:ai_chat' %}"{% endif %}
+  {% if user.is_authenticated %}data-ai-chat-url="{% url 'posts_api:ai_chat' %}"{% endif %}
 >
   {{ wheel_tag_items|json_script:"wheel-tag-items" }}
   {{ ui_i18n|json_script:"eatwhat-i18n" }}
@@ -334,6 +334,13 @@
           <a class="saas-nav-link" href="{% url 'posts:feed' %}">{% trans "首頁" %}</a>
           {% if user.is_authenticated %}
             <a class="saas-nav-link" href="{% url 'posts:collections_list' %}">{% trans "我的收藏" %}</a>
+            <a class="saas-nav-link relative inline-flex items-center gap-1" href="{% url 'posts:notifications_list' %}" title="{% trans '通知中心' %}">
+              <i class="fa-solid fa-bell" aria-hidden="true"></i>
+              <span>{% trans "通知中心" %}</span>
+              {% if unread_notifications_count %}
+                <span class="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-white">{{ unread_notifications_count }}</span>
+              {% endif %}
+            </a>
             <a class="saas-nav-link max-w-[10rem] truncate" href="{% url 'accounts:profile_detail' user.username %}" title="{{ user.username }}">{{ user.username }}</a>
             <form method="post" action="{% url 'accounts:logout' %}" class="m-0 inline">
               {% csrf_token %}
@@ -379,6 +386,12 @@
           <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:feed' %}" @click="open = false">{% trans "首頁" %}</a>
           {% if user.is_authenticated %}
             <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'posts:collections_list' %}" @click="open = false">{% trans "我的收藏" %}</a>
+            <a class="saas-nav-link flex min-h-11 items-center justify-between px-4 py-3" href="{% url 'posts:notifications_list' %}" @click="open = false">
+              <span class="inline-flex items-center gap-2"><i class="fa-solid fa-bell" aria-hidden="true"></i>{% trans "通知中心" %}</span>
+              {% if unread_notifications_count %}
+                <span class="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-white">{{ unread_notifications_count }}</span>
+              {% endif %}
+            </a>
             <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_detail' user.username %}" @click="open = false">{% trans "個人頁面" %}</a>
             <a class="saas-nav-link block min-h-11 px-4 py-3" href="{% url 'accounts:profile_edit' %}" @click="open = false">{% trans "編輯檔案" %}</a>
             <form method="post" action="{% url 'accounts:logout' %}" class="m-0 w-full px-4 py-2" @submit="open = false">
@@ -498,7 +511,7 @@
   {% include "partials/food_ai_assistant.html" %}
   {% endif %}
 
-  <main class="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6{% if not user.is_authenticated %} flex-1{% endif %}">
+  <main class="mx-auto w-full max-w-5xl flex-1 px-3 py-4 sm:px-4 sm:py-6">
     {% if messages %}
       {% for message in messages %}
         <div class="saas-card mb-4 px-4 py-3 text-sm sm:text-base">
