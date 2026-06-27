@@ -36,7 +36,7 @@ from .models import (
 )
 from .notifications import notify_followers_new_post, notify_post_commented, notify_post_liked
 from .tasks import analyze_post_health_task
-from .recommendations import RECOMMENDATION_FEED_TOP_COUNT, get_personalized_recommendations
+from .recommendations import get_today_meal_recommendations
 
 
 def _wants_json(request):
@@ -106,36 +106,6 @@ def _annotate_posts_for_user(posts_qs, user):
             ),
         )
     return posts_qs
-
-
-def _fetch_recommended_feed_posts(user, *, limit: int = RECOMMENDATION_FEED_TOP_COUNT):
-    """取得首頁置頂推薦貼文（含互動 annotate）。"""
-    items, meta = get_personalized_recommendations(user, limit=limit)
-    if not items:
-        return [], meta
-
-    rec_ids = [item.post.id for item in items]
-    reason_map = {item.post.id: item.reason for item in items}
-    rec_qs = _annotate_posts_for_user(
-        Post.objects.filter(pk__in=rec_ids)
-        .select_related("author", "author__profile", "category", "latest_health_insight")
-        .prefetch_related("likes", "post_comments", "tags")
-        .annotate(
-            comment_count=Count("post_comments", distinct=True),
-            collection_count=Count("collections", distinct=True),
-        ),
-        user,
-    )
-    rec_by_id = {p.id: p for p in rec_qs}
-    rec_posts = []
-    for post_id in rec_ids:
-        post = rec_by_id.get(post_id)
-        if not post:
-            continue
-        post.is_recommended = True
-        post.recommendation_reason = reason_map.get(post_id, "")
-        rec_posts.append(post)
-    return rec_posts, meta
 
 
 def feed(request):
@@ -239,22 +209,16 @@ def feed(request):
         and (not page_number or page_number == "1")
     )
 
-    recommended_feed_posts: list = []
-    recommendation_meta: dict = {}
-    if show_recommendations:
-        recommended_feed_posts, recommendation_meta = _fetch_recommended_feed_posts(request.user)
-        if recommended_feed_posts:
-            posts = posts.exclude(pk__in=[p.id for p in recommended_feed_posts])
+    today_meal_recommendations = (
+        get_today_meal_recommendations(request.user, limit=3) if show_recommendations else []
+    )
 
     posts = _annotate_posts_for_user(posts, request.user)
 
     paginator = Paginator(posts, 20)
     page_obj = paginator.get_page(page_number or 1)
 
-    if show_recommendations and recommended_feed_posts:
-        feed_posts = recommended_feed_posts + list(page_obj.object_list)
-    else:
-        feed_posts = list(page_obj.object_list)
+    feed_posts = list(page_obj.object_list)
 
     liked_comment_ids = []
     if request.user.is_authenticated:
@@ -287,7 +251,7 @@ def feed(request):
             "selected_tag_ids": tag_ids,
             "following_only": following_only,
             "liked_comment_ids": liked_comment_ids,
-            "recommendation_meta": recommendation_meta,
+            "today_meal_recommendations": today_meal_recommendations,
             "show_recommendations": show_recommendations,
         },
     )
